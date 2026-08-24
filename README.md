@@ -23,8 +23,7 @@ Il n'y a rien à installer. Ouvre simplement `index.html` dans un navigateur
 - **Étapes personnalisables** : bouton *Étapes* dans l'en-tête — ajoute,
   renomme, réordonne ou supprime les étapes côté client et côté
   transitaire. L'ordre choisi détermine la progression affichée.
-- **Import / export CSV** : bouton *Exporter CSV* télécharge la liste des
-  envois en cours ; *Importer CSV* relit un fichier `.csv` (ou du texte
+- **Import CSV** : *Importer CSV* relit un fichier `.csv` (ou du texte
   collé depuis Excel) et met à jour les envois existants (par référence)
   ou en ajoute de nouveaux. Format attendu, voir `data/exemple-envois.csv` :
 
@@ -41,8 +40,8 @@ Il n'y a rien à installer. Ouvre simplement `index.html` dans un navigateur
 
 Les envois et la liste des étapes sont stockés dans le `localStorage` du
 navigateur — **propre à chaque appareil/navigateur**, sans compte ni
-serveur. Pour faire circuler les données (autre poste, autre personne,
-sauvegarde), utilise l'export/import CSV.
+serveur. Pour transférer des envois vers cet appareil, utilise l'import CSV
+(fichier `.csv` ou lignes collées depuis Excel).
 
 ⚠️ Si tu renommes ou supprimes une étape utilisée par des envois existants,
 ces envois ne retrouveront pas automatiquement l'étape équivalente : il

@@ -1,6 +1,10 @@
 // ===== Registre des expéditions — SOKA =====
 // Aucune dépendance externe. Toutes les données restent dans ce navigateur
-// (localStorage) sauf export/import volontaire en CSV.
+// (localStorage), sauf import volontaire d'un fichier CSV.
+// Les interactions passent par des attributs data-action + une délégation
+// d'évènements unique (plus robuste que des onclick="" avec du texte
+// utilisateur inséré dedans, qui cassaient dès qu'un nom contenait
+// une apostrophe ou un guillemet).
 
 const DEFAULT_CLIENT_STEPS = ["Commande reçue", "Documents transmis", "Expédié", "Dédouané", "Livré"];
 const DEFAULT_TRANSIT_STEPS = ["Pris en charge", "En transport", "En dédouanement", "Livraison finale", "Confirmé"];
@@ -18,6 +22,14 @@ let state = {
 
 let draftSteps = null; // édition en cours dans la fenêtre Réglages
 
+function uid() {
+  return "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function escapeHtml(str) {
+  return (str || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
 // ---------- Icônes SVG inline (aucune dépendance externe) ----------
 const ICON_PATHS = {
   package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
@@ -31,7 +43,6 @@ const ICON_PATHS = {
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
-  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
   checkCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
   alertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
@@ -42,14 +53,6 @@ const ICON_PATHS = {
 function icon(name, size = 16, extraStyle = "") {
   const paths = ICON_PATHS[name] || "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extraStyle}">${paths}</svg>`;
-}
-
-function uid() {
-  return "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function escapeHtml(str) {
-  return (str || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
 
 // ---------- Persistance ----------
@@ -122,7 +125,7 @@ function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
     const targetValue = targetIndex >= 0 ? steps[targetIndex] : "";
     html += `<button class="step-dot ${isCurrent ? "current" : ""}" title="${escapeHtml(step)}"
       style="border-color:${reached ? color : "var(--line)"}; background:${reached ? color : "var(--paper)"};"
-      onclick="setStep('${shipmentId}','${type}', ${JSON.stringify(targetValue)})"></button>`;
+      data-action="set-step" data-id="${shipmentId}" data-type="${type}" data-value="${escapeHtml(targetValue)}"></button>`;
     if (i < steps.length - 1) {
       html += `<div class="step-connector" style="background:${i < currentIndex ? color : "var(--line)"};"></div>`;
     }
@@ -140,7 +143,7 @@ function cardHtml(s) {
   return `
   <div class="card">
     <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
-    <button class="client-link" onclick="filterByClient(${JSON.stringify(s.client || "")})">${escapeHtml(s.client || "Client sans nom")}</button>
+    <button class="client-link" data-action="filter-client" data-client="${escapeHtml(s.client || "")}">${escapeHtml(s.client || "Client sans nom")}</button>
     <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.pays || "Destination non précisée")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
 
     <div class="boat-head">
@@ -167,7 +170,7 @@ function cardHtml(s) {
 
     <div class="card-footer">
       ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(s.lien)}" target="_blank" rel="noopener noreferrer">${icon("externalLink", 13)} Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
-      <button class="delete-btn" title="Supprimer" onclick="deleteShipment('${s.id}')">${icon("trash", 14)}</button>
+      <button class="delete-btn" title="Supprimer" data-action="delete-shipment" data-id="${s.id}">${icon("trash", 14)}</button>
     </div>
   </div>`;
 }
@@ -176,9 +179,9 @@ function render() {
   const toolbar = document.getElementById("toolbar");
   const filters = ["TOUS", "NOUVEAU", "EN TRANSIT", "LIVRÉ"];
   toolbar.innerHTML = filters.map((f) =>
-    `<button class="chip ${state.filter === f ? "active" : ""}" onclick="setFilter('${f}')">${f}</button>`
+    `<button class="chip ${state.filter === f ? "active" : ""}" data-action="set-filter" data-filter="${f}">${f}</button>`
   ).join("") + (state.clientFilter
-    ? `<button class="chip client-active" onclick="clearClientFilter()">Client : ${escapeHtml(state.clientFilter)} ${icon("x", 12)}</button>`
+    ? `<button class="chip client-active" data-action="clear-client-filter">Client : ${escapeHtml(state.clientFilter)} ${icon("x", 12)}</button>`
     : "");
 
   const filtered = state.shipments.filter((s) =>
@@ -219,15 +222,15 @@ function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
 
 function openNew() {
   document.getElementById("modal-root").innerHTML = `
-  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-overlay" data-action="overlay-close">
     <div class="modal">
-      <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
+      <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
       <div class="field"><label>Client</label><input id="f-client" /></div>
       <div class="field"><label>Transitaire</label><input id="f-transitaire" /></div>
       <div class="field"><label>Pays de destination</label><input id="f-pays" /></div>
       <div class="field"><label>Référence envoi</label><input id="f-ref" /></div>
       <div class="field"><label>Lien dossier Moovapps</label><input id="f-lien" /></div>
-      <button class="modal-submit" onclick="submitNew()">Ajouter l'envoi</button>
+      <button class="modal-submit" data-action="submit-new">Ajouter l'envoi</button>
     </div>
   </div>`;
 }
@@ -261,23 +264,23 @@ function openSettings() {
 
 function renderSettingsModal() {
   document.getElementById("modal-root").innerHTML = `
-  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide">
-      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
+      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
       <div class="modal-note">Ajoute, renomme, réordonne ou supprime les étapes. L'ordre détermine la progression du bateau.</div>
       <div class="settings-columns">
         <div class="settings-col">
           <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
           <div id="settings-client"></div>
-          <button class="add-step-btn" onclick="addDraftStep('client')">+ Ajouter une étape</button>
+          <button class="add-step-btn" data-action="add-step" data-type="client">+ Ajouter une étape</button>
         </div>
         <div class="settings-col">
           <h3>${icon("truck", 13, "margin-right:4px;")}Étapes côté transitaire</h3>
           <div id="settings-transit"></div>
-          <button class="add-step-btn" onclick="addDraftStep('transit')">+ Ajouter une étape</button>
+          <button class="add-step-btn" data-action="add-step" data-type="transit">+ Ajouter une étape</button>
         </div>
       </div>
-      <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" onclick="saveSettings()">Enregistrer les étapes</button>
+      <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" data-action="save-settings">Enregistrer les étapes</button>
     </div>
   </div>`;
   renderStepEditColumn("client");
@@ -288,10 +291,10 @@ function renderStepEditColumn(type) {
   const container = document.getElementById(`settings-${type}`);
   container.innerHTML = draftSteps[type].map((step, i) => `
     <div class="step-edit-row">
-      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},-1)" ${i === 0 ? "disabled" : ""}>${icon("chevronUp", 12)}</button>
-      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},1)" ${i === draftSteps[type].length - 1 ? "disabled" : ""}>${icon("chevronDown", 12)}</button>
-      <input value="${escapeHtml(step)}" oninput="updateDraftStep('${type}',${i},this.value)" />
-      <button class="icon-btn" onclick="removeDraftStep('${type}',${i})">${icon("x", 12)}</button>
+      <button class="icon-btn" data-action="move-step" data-type="${type}" data-index="${i}" data-dir="-1" ${i === 0 ? "disabled" : ""}>${icon("chevronUp", 12)}</button>
+      <button class="icon-btn" data-action="move-step" data-type="${type}" data-index="${i}" data-dir="1" ${i === draftSteps[type].length - 1 ? "disabled" : ""}>${icon("chevronDown", 12)}</button>
+      <input value="${escapeHtml(step)}" data-action="update-step-text" data-type="${type}" data-index="${i}" />
+      <button class="icon-btn" data-action="remove-step" data-type="${type}" data-index="${i}">${icon("x", 12)}</button>
     </div>
   `).join("");
 }
@@ -322,7 +325,7 @@ function saveSettings() {
   render();
 }
 
-// ---------- CSV : parsing générique (virgule ou tabulation) ----------
+// ---------- CSV : import uniquement (parsing générique virgule/tabulation) ----------
 function splitDelimitedLine(line, delim) {
   const cells = [];
   let cur = "";
@@ -407,11 +410,11 @@ function mergeParsedRows(rows) {
 
 function openImport() {
   document.getElementById("modal-root").innerHTML = `
-  <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide">
-      <div class="modal-head"><h2>Importer un CSV</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
+      <div class="modal-head"><h2>Importer un CSV</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
       <div class="modal-note">
-        Choisis un fichier .csv exporté depuis cette appli ou ton classeur, ou colle directement des lignes copiées depuis Excel.<br>
+        Choisis un fichier .csv, ou colle directement des lignes copiées depuis Excel.<br>
         Colonnes attendues : ${CSV_HEADERS.join(", ")}.
       </div>
       <div class="field">
@@ -420,7 +423,7 @@ function openImport() {
       </div>
       <div class="field"><label>...ou coller ici</label><textarea id="import-text" placeholder="Colle ici les lignes copiées depuis Excel…"></textarea></div>
       <div id="import-feedback"></div>
-      <button class="modal-submit" style="background:var(--blue); color:var(--paper);" onclick="submitImport()">Importer</button>
+      <button class="modal-submit" style="background:var(--blue); color:var(--paper);" data-action="submit-import">Importer</button>
     </div>
   </div>`;
 }
@@ -445,30 +448,41 @@ function submitImport() {
   if (added || updated) { saveShipments(); render(); }
 }
 
-// ---------- CSV : export ----------
-function csvEscape(value) {
-  const v = (value == null) ? "" : String(value);
-  if (/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
-  return v;
+// ---------- Délégation d'évènements (clics et saisie) ----------
+function handleDelegatedClick(e) {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.dataset.action;
+
+  switch (action) {
+    case "set-filter": setFilter(el.dataset.filter); break;
+    case "clear-client-filter": clearClientFilter(); break;
+    case "filter-client": filterByClient(el.dataset.client); break;
+    case "set-step": setStep(el.dataset.id, el.dataset.type, el.dataset.value); break;
+    case "delete-shipment": deleteShipment(el.dataset.id); break;
+    case "open-new": openNew(); break;
+    case "submit-new": submitNew(); break;
+    case "open-settings": openSettings(); break;
+    case "save-settings": saveSettings(); break;
+    case "add-step": addDraftStep(el.dataset.type); break;
+    case "remove-step": removeDraftStep(el.dataset.type, Number(el.dataset.index)); break;
+    case "move-step": moveDraftStep(el.dataset.type, Number(el.dataset.index), Number(el.dataset.dir)); break;
+    case "open-import": openImport(); break;
+    case "submit-import": submitImport(); break;
+    case "close-modal": closeModal(); break;
+    case "overlay-close": if (e.target === el) closeModal(); break;
+  }
 }
 
-function exportCsv() {
-  const rows = [CSV_HEADERS];
-  state.shipments.forEach((s) => {
-    rows.push([s.ref || "", s.client || "", s.transitaire || "", s.pays || "", s.date || "", s.lien || "", s.clientStepValue || "", s.transitStepValue || ""]);
-  });
-  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  const date = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `envois-soka-${date}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+function handleDelegatedInput(e) {
+  const el = e.target;
+  if (el.dataset && el.dataset.action === "update-step-text") {
+    updateDraftStep(el.dataset.type, Number(el.dataset.index), el.value);
+  }
 }
+
+document.addEventListener("click", handleDelegatedClick);
+document.addEventListener("input", handleDelegatedInput);
 
 // ---------- Initialisation ----------
 loadState();
