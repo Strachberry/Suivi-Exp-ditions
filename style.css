@@ -40,7 +40,10 @@ header .subtitle { font-size: 12px; color: #8FA0BE; margin-top: 2px; }
   display: flex; align-items: center; gap: 6px; border: none; border-radius: 3px;
   padding: 9px 14px; font-family: 'Oswald', Arial, sans-serif; font-size: 12.5px;
   letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
 }
+.btn:hover { transform: translateY(-1px); opacity: 0.92; }
+.btn:active { transform: translateY(0); }
 .btn-primary { background: var(--ochre); color: var(--navy); }
 .btn-outline { background: transparent; color: var(--paper); border: 1px solid var(--blue-soft); }
 .btn-ghost { background: transparent; color: var(--paper); border: 1px solid rgba(241,236,223,0.35); }
@@ -50,6 +53,7 @@ header .subtitle { font-size: 12px; color: #8FA0BE; margin-top: 2px; }
   padding: 5px 12px; border-radius: 20px; border: 1px solid var(--line); background: transparent;
   color: var(--muted); font-size: 11.5px; font-family: 'Oswald', Arial, sans-serif;
   letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .chip.active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 .chip.client-active { border-color: var(--blue); background: var(--blue); color: var(--paper); display:flex; align-items:center; gap:5px; }
@@ -62,7 +66,8 @@ main { padding: 24px; }
 }
 .empty .sub { font-family: 'IBM Plex Sans', Arial, sans-serif; text-transform: none; letter-spacing: normal; font-size: 12.5px; margin-top: 6px; }
 
-.card { background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 18px 18px 14px; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 18px 18px 14px; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+.card:hover { box-shadow: 0 4px 14px rgba(22,35,61,0.10); transform: translateY(-2px); }
 .ref { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
 .client-link {
   background: none; border: none; padding: 0; cursor: pointer; font-family: 'Oswald', Arial, sans-serif;
@@ -77,7 +82,7 @@ main { padding: 24px; }
 .lane { position: relative; height: 46px; border-radius: 6px; background: linear-gradient(180deg,#DEE6EC 0%,#C2D3DE 100%); overflow: hidden; margin-bottom: 14px; }
 .lane .dash { position: absolute; left: 0; right: 0; top: 58%; border-top: 2px dashed rgba(31,42,36,0.25); }
 .lane .port { position: absolute; top: 50%; transform: translateY(-50%); color: var(--blue-soft); font-size: 15px; }
-.lane .boat { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.4s ease; font-size: 22px; }
+.lane .boat { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1); font-size: 22px; }
 
 .stepper { margin-bottom: 10px; }
 .stepper-label { display: flex; align-items: center; gap: 6px; font-family: 'Oswald', Arial, sans-serif; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
@@ -92,8 +97,18 @@ main { padding: 24px; }
 .no-link { font-size: 12px; color: #B3AC98; }
 .delete-btn { background: none; border: none; cursor: pointer; color: #B3AC98; padding: 4px; font-size: 14px; }
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(22,35,61,0.55); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
-.modal { background: var(--cream); border-radius: 4px; padding: 24px; width: 100%; max-width: 460px; border: 1px solid var(--line); max-height: 88vh; overflow-y: auto; }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(22,35,61,0.55); display: flex; align-items: center;
+  justify-content: center; z-index: 50; padding: 16px;
+  animation: overlay-in 0.15s ease;
+}
+.modal {
+  background: var(--cream); border-radius: 4px; padding: 24px; width: 100%; max-width: 460px;
+  border: 1px solid var(--line); max-height: 88vh; overflow-y: auto;
+  animation: modal-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .modal.wide { max-width: 640px; }
 .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .modal-head h2 { font-family: 'Oswald', Arial, sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }

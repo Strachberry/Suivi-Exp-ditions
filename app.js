@@ -18,6 +18,32 @@ let state = {
 
 let draftSteps = null; // édition en cours dans la fenêtre Réglages
 
+// ---------- Icônes SVG inline (aucune dépendance externe) ----------
+const ICON_PATHS = {
+  package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  mapPin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  ship: '<path d="M12 10.189V14"/><path d="M12 2v3"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-8.188-3.639a2 2 0 0 0-1.624 0L3 14a11.6 11.6 0 0 0 2.81 7.76"/><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+  anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" x2="12" y1="22" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+  flag: '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 8 2a6 6 0 0 0 3.6-1.2A1 1 0 0 1 21 3.4v10.8a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+  checkCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  alertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+  chevronUp: '<path d="m18 15-6-6-6 6"/>',
+  chevronDown: '<path d="m6 9 6 6 6-6"/>',
+};
+
+function icon(name, size = 16, extraStyle = "") {
+  const paths = ICON_PATHS[name] || "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extraStyle}">${paths}</svg>`;
+}
+
 function uid() {
   return "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -115,7 +141,7 @@ function cardHtml(s) {
   <div class="card">
     <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
     <button class="client-link" onclick="filterByClient(${JSON.stringify(s.client || "")})">${escapeHtml(s.client || "Client sans nom")}</button>
-    <div class="meta">📍 ${escapeHtml(s.pays || "Destination non précisée")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
+    <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.pays || "Destination non précisée")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
 
     <div class="boat-head">
       <div class="status-label" style="color:${sc.text}">${status}</div>
@@ -123,25 +149,25 @@ function cardHtml(s) {
     </div>
     <div class="lane">
       <div class="dash"></div>
-      <div class="port" style="left:8px;">⚓</div>
-      <div class="port" style="right:8px;">🏁</div>
-      <div class="boat" style="left:${left}%;">🚢</div>
+      <div class="port" style="left:8px;">${icon("anchor", 14)}</div>
+      <div class="port" style="right:8px;">${icon("flag", 14)}</div>
+      <div class="boat" style="left:${left}%; color:${sc.text};">${icon("ship", 24)}</div>
     </div>
 
     <div class="stepper">
-      <div class="stepper-label">📦 Côté client</div>
+      <div class="stepper-label">${icon("package", 13)} Côté client</div>
       ${stepsRowHtml(s.id, state.steps.client, s.clientStepValue, "client", "#2C5F8A")}
       <div class="stepper-current">${s.clientStepValue ? escapeHtml(s.clientStepValue) : "Pas encore commencé"}</div>
     </div>
     <div class="stepper">
-      <div class="stepper-label">🚚 Côté transitaire</div>
+      <div class="stepper-label">${icon("truck", 13)} Côté transitaire</div>
       ${stepsRowHtml(s.id, state.steps.transit, s.transitStepValue, "transit", "#8A6A3B")}
       <div class="stepper-current">${s.transitStepValue ? escapeHtml(s.transitStepValue) : "Pas encore commencé"}</div>
     </div>
 
     <div class="card-footer">
-      ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(s.lien)}" target="_blank" rel="noopener noreferrer">🔗 Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
-      <button class="delete-btn" title="Supprimer" onclick="deleteShipment('${s.id}')">🗑</button>
+      ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(s.lien)}" target="_blank" rel="noopener noreferrer">${icon("externalLink", 13)} Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
+      <button class="delete-btn" title="Supprimer" onclick="deleteShipment('${s.id}')">${icon("trash", 14)}</button>
     </div>
   </div>`;
 }
@@ -152,7 +178,7 @@ function render() {
   toolbar.innerHTML = filters.map((f) =>
     `<button class="chip ${state.filter === f ? "active" : ""}" onclick="setFilter('${f}')">${f}</button>`
   ).join("") + (state.clientFilter
-    ? `<button class="chip client-active" onclick="clearClientFilter()">Client : ${escapeHtml(state.clientFilter)} ✕</button>`
+    ? `<button class="chip client-active" onclick="clearClientFilter()">Client : ${escapeHtml(state.clientFilter)} ${icon("x", 12)}</button>`
     : "");
 
   const filtered = state.shipments.filter((s) =>
@@ -162,7 +188,7 @@ function render() {
 
   const content = document.getElementById("content");
   if (filtered.length === 0) {
-    content.innerHTML = `<div class="empty">✅<div>Aucun envoi ici</div>
+    content.innerHTML = `<div class="empty">${icon("checkCircle", 28, "opacity:0.5;margin-bottom:10px;")}<div>Aucun envoi ici</div>
       <div class="sub">Clique sur « Nouvel envoi » ou « Importer un CSV » pour commencer.</div></div>`;
   } else {
     content.innerHTML = `<div class="grid">${filtered.map(cardHtml).join("")}</div>`;
@@ -195,7 +221,7 @@ function openNew() {
   document.getElementById("modal-root").innerHTML = `
   <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" onclick="closeModal()">✕</button></div>
+      <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
       <div class="field"><label>Client</label><input id="f-client" /></div>
       <div class="field"><label>Transitaire</label><input id="f-transitaire" /></div>
       <div class="field"><label>Pays de destination</label><input id="f-pays" /></div>
@@ -237,16 +263,16 @@ function renderSettingsModal() {
   document.getElementById("modal-root").innerHTML = `
   <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
     <div class="modal wide">
-      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" onclick="closeModal()">✕</button></div>
+      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
       <div class="modal-note">Ajoute, renomme, réordonne ou supprime les étapes. L'ordre détermine la progression du bateau.</div>
       <div class="settings-columns">
         <div class="settings-col">
-          <h3>📦 Étapes côté client</h3>
+          <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
           <div id="settings-client"></div>
           <button class="add-step-btn" onclick="addDraftStep('client')">+ Ajouter une étape</button>
         </div>
         <div class="settings-col">
-          <h3>🚚 Étapes côté transitaire</h3>
+          <h3>${icon("truck", 13, "margin-right:4px;")}Étapes côté transitaire</h3>
           <div id="settings-transit"></div>
           <button class="add-step-btn" onclick="addDraftStep('transit')">+ Ajouter une étape</button>
         </div>
@@ -262,10 +288,10 @@ function renderStepEditColumn(type) {
   const container = document.getElementById(`settings-${type}`);
   container.innerHTML = draftSteps[type].map((step, i) => `
     <div class="step-edit-row">
-      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},-1)" ${i === 0 ? "disabled" : ""}>↑</button>
-      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},1)" ${i === draftSteps[type].length - 1 ? "disabled" : ""}>↓</button>
+      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},-1)" ${i === 0 ? "disabled" : ""}>${icon("chevronUp", 12)}</button>
+      <button class="icon-btn" onclick="moveDraftStep('${type}',${i},1)" ${i === draftSteps[type].length - 1 ? "disabled" : ""}>${icon("chevronDown", 12)}</button>
       <input value="${escapeHtml(step)}" oninput="updateDraftStep('${type}',${i},this.value)" />
-      <button class="icon-btn" onclick="removeDraftStep('${type}',${i})">✕</button>
+      <button class="icon-btn" onclick="removeDraftStep('${type}',${i})">${icon("x", 12)}</button>
     </div>
   `).join("");
 }
@@ -383,7 +409,7 @@ function openImport() {
   document.getElementById("modal-root").innerHTML = `
   <div class="modal-overlay" onclick="if(event.target===this) closeModal()">
     <div class="modal wide">
-      <div class="modal-head"><h2>Importer un CSV</h2><button class="close-btn" onclick="closeModal()">✕</button></div>
+      <div class="modal-head"><h2>Importer un CSV</h2><button class="close-btn" onclick="closeModal()">${icon("x", 18)}</button></div>
       <div class="modal-note">
         Choisis un fichier .csv exporté depuis cette appli ou ton classeur, ou colle directement des lignes copiées depuis Excel.<br>
         Colonnes attendues : ${CSV_HEADERS.join(", ")}.
@@ -413,7 +439,7 @@ function submitImport() {
   const { added, updated, warnings } = mergeParsedRows(rows);
   const feedback = document.getElementById("import-feedback");
   let html = "";
-  if (warnings.length) html += `<div class="warning-box">${warnings.map((w) => `⚠️ ${escapeHtml(w)}`).join("<br>")}</div>`;
+  if (warnings.length) html += `<div class="warning-box">${warnings.map((w) => `${icon("alertCircle", 13, "margin-right:4px;")}${escapeHtml(w)}`).join("<br>")}</div>`;
   html += `<div class="import-result">${added} envoi(s) ajouté(s), ${updated} mis à jour.</div>`;
   feedback.innerHTML = html;
   if (added || updated) { saveShipments(); render(); }
