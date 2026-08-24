@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Registre des expéditions – SOKA</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Registre des expéditions</h1>
+    <div class="subtitle">Suivi client · Suivi transitaire · Accès Moovapps</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="openSettings()">⚙️ Étapes</button>
+    <button class="btn btn-outline" onclick="exportCsv()">📋 Exporter CSV</button>
+    <button class="btn btn-outline" onclick="openImport()">📥 Importer CSV</button>
+    <button class="btn btn-primary" onclick="openNew()">➕ Nouvel envoi</button>
+  </div>
+</header>
+
+<div class="storage-note">
+  Les données restent dans ce navigateur (localStorage), sur cet appareil. Utilise « Exporter CSV » /
+  « Importer CSV » pour les faire circuler entre appareils ou avec ton classeur Excel.
+</div>
+
+<div class="toolbar" id="toolbar"></div>
+
+<main>
+  <div id="content"></div>
+</main>
+
+<div id="modal-root"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
