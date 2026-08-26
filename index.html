@@ -43,6 +43,15 @@ header {
 header h1 { font-size: 22px; color: var(--paper); letter-spacing: 0.04em; text-transform: uppercase; margin: 0; }
 header .subtitle { font-size: 12px; color: #8FA0BE; margin-top: 2px; }
 
+.sync-badge {
+  font-size: 11px; padding: 3px 9px; border-radius: 12px; font-family: 'IBM Plex Sans', Arial, sans-serif;
+  display: inline-block; margin-top: 6px; letter-spacing: 0.02em;
+}
+.sync-connecting { background: rgba(143,160,190,0.2); color: #B7C2D6; }
+.sync-synced { background: rgba(107,127,79,0.25); color: #C3D4A8; }
+.sync-offline { background: rgba(185,141,79,0.25); color: #E3C088; }
+.sync-error { background: rgba(176,58,46,0.3); color: #EFAFA5; }
+
 .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn {
   display: flex; align-items: center; gap: 6px; border: none; border-radius: 3px;
@@ -123,7 +132,7 @@ main { padding: 24px; }
 .close-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; }
 .field { margin-bottom: 12px; }
 .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-.field input, .field textarea { width: 100%; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-family: 'IBM Plex Sans', Arial, sans-serif; }
+.field input, .field textarea, .field select { width: 100%; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-family: 'IBM Plex Sans', Arial, sans-serif; }
 .field textarea { font-family: 'IBM Plex Mono', monospace; min-height: 110px; resize: vertical; }
 .modal-note { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
 .modal-submit { width: 100%; margin-top: 6px; padding: 10px 0; background: var(--ink); color: var(--paper); border: none; border-radius: 3px; font-family: 'Oswald', Arial, sans-serif; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
@@ -140,6 +149,24 @@ main { padding: 24px; }
 .icon-btn { background: none; border: 1px solid var(--line); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 4px 6px; color: var(--muted); }
 .add-step-btn { margin-top: 4px; background: none; border: 1px dashed var(--line); border-radius: 3px; padding: 6px 10px; font-size: 12px; color: var(--muted); cursor: pointer; width: 100%; }
 
+.doc-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.doc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.doc-name { font-size: 12.5px; color: var(--ink); flex: 1; }
+.doc-buttons { display: flex; gap: 4px; flex-shrink: 0; }
+.doc-btn {
+  font-size: 10.5px; padding: 3px 9px; border-radius: 3px; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); cursor: pointer; font-family: 'Oswald', Arial, sans-serif; letter-spacing: 0.03em;
+  text-transform: uppercase; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.doc-btn.active-soka { background: var(--ochre); border-color: var(--ochre); color: var(--navy); }
+.doc-btn.active-transit { background: #8A6A3B; border-color: #8A6A3B; color: var(--paper); }
+
+.comment-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.comment-section textarea {
+  width: 100%; min-height: 52px; padding: 7px 9px; border-radius: 3px; border: 1px solid var(--line);
+  background: #fff; font-size: 12.5px; font-family: 'IBM Plex Sans', Arial, sans-serif; resize: vertical;
+}
+
 @media (max-width: 480px) {
   header { padding: 16px; }
   main { padding: 16px; }
@@ -155,9 +182,10 @@ main { padding: 24px; }
   <div>
     <h1>Registre des expéditions</h1>
     <div class="subtitle">Suivi client · Suivi transitaire · Accès Moovapps</div>
+    <span id="sync-status" class="sync-badge sync-connecting">● Connexion…</span>
   </div>
   <div class="header-actions">
-    <button class="btn btn-ghost" data-action="open-settings"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Étapes</button>
+    <button class="btn btn-ghost" data-action="open-settings"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Réglages</button>
     <button class="btn btn-primary" data-action="open-new"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nouvel envoi</button>
   </div>
 </header>
@@ -174,6 +202,8 @@ main { padding: 24px; }
 
 <div id="modal-root"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script>
 // ===== Registre des expéditions — SOKA =====
 // Aucune dépendance externe. Toutes les données restent dans ce navigateur
@@ -188,13 +218,31 @@ const DEFAULT_TRANSIT_STEPS = ["Pris en charge", "En transport", "En dédouaneme
 
 const SHIPMENTS_KEY = "soka-shipments-v1";
 const STEPS_KEY = "soka-steps-v1";
+const DOCUMENTS_KEY = "soka-documents-v1";
+const DEFAULT_DOCUMENTS = ["Facture commerciale", "Liste de colisage", "Certificat d'origine"];
+const LISTS_KEY = "soka-lists-v1";
 
 let state = {
   shipments: [],
   steps: { client: [...DEFAULT_CLIENT_STEPS], transit: [...DEFAULT_TRANSIT_STEPS] },
+  documents: [...DEFAULT_DOCUMENTS],
+  lists: { clients: [], transitaires: [], ports: [] },
   filter: "TOUS",
   clientFilter: null,
 };
+
+// ---------- Firebase (synchronisation temps réel entre appareils) ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyAIgJvANb-rUA-V_OK5TugqLr4L7Yye4Nk",
+  authDomain: "soka-suivi.firebaseapp.com",
+  projectId: "soka-suivi",
+  storageBucket: "soka-suivi.firebasestorage.app",
+  messagingSenderId: "470155031268",
+  appId: "1:470155031268:web:535de861adc68791f632f1",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC_REF = db.collection("suivi-expeditions").doc("data");
 
 let draftSteps = null; // édition en cours dans la fenêtre Réglages
 
@@ -224,6 +272,8 @@ const ICON_PATHS = {
   alertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   chevronUp: '<path d="m18 15-6-6-6 6"/>',
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
+  file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+  messageSquare: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
 };
 
 function icon(name, size = 16, extraStyle = "") {
@@ -231,8 +281,10 @@ function icon(name, size = 16, extraStyle = "") {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extraStyle}">${paths}</svg>`;
 }
 
-// ---------- Persistance ----------
-function loadState() {
+// ---------- Persistance : Firestore (source de vérité, synchronisée en
+// temps réel entre appareils) + cache localStorage (secours hors-ligne
+// et affichage instantané avant que Firestore ait répondu). ----------
+function loadFromLocalCache() {
   try {
     const rawShipments = localStorage.getItem(SHIPMENTS_KEY);
     state.shipments = rawShipments ? JSON.parse(rawShipments) : [];
@@ -246,16 +298,124 @@ function loadState() {
       if (Array.isArray(parsed.transit) && parsed.transit.length) state.steps.transit = parsed.transit;
     }
   } catch (e) { /* garde les valeurs par défaut */ }
+
+  try {
+    const rawDocuments = localStorage.getItem(DOCUMENTS_KEY);
+    if (rawDocuments) {
+      const parsed = JSON.parse(rawDocuments);
+      if (Array.isArray(parsed)) state.documents = parsed;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
+
+  try {
+    const rawLists = localStorage.getItem(LISTS_KEY);
+    if (rawLists) {
+      const parsed = JSON.parse(rawLists);
+      if (Array.isArray(parsed.clients)) state.lists.clients = parsed.clients;
+      if (Array.isArray(parsed.transitaires)) state.lists.transitaires = parsed.transitaires;
+      if (Array.isArray(parsed.ports)) state.lists.ports = parsed.ports;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
+}
+
+function cacheLocally() {
+  try {
+    localStorage.setItem(SHIPMENTS_KEY, JSON.stringify(state.shipments));
+    localStorage.setItem(STEPS_KEY, JSON.stringify(state.steps));
+    localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(state.documents));
+    localStorage.setItem(LISTS_KEY, JSON.stringify(state.lists));
+  } catch (e) { /* stockage plein ou navigation privée : tant pis pour le cache */ }
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  const map = {
+    connecting: { text: "Connexion…", cls: "sync-connecting" },
+    synced: { text: "Synchronisé", cls: "sync-synced" },
+    offline: { text: "Hors ligne (cache local)", cls: "sync-offline" },
+    error: { text: "Erreur de synchronisation", cls: "sync-error" },
+  };
+  const m = map[status] || map.connecting;
+  el.textContent = "● " + m.text;
+  el.className = "sync-badge " + m.cls;
+}
+
+function pushFullStateToCloud() {
+  DOC_REF.set({
+    shipments: state.shipments,
+    steps: state.steps,
+    documents: state.documents,
+    lists: state.lists,
+  }).catch((e) => {
+    console.error(e);
+    setSyncStatus("error");
+    alert("Impossible d'initialiser la synchronisation (vérifie la connexion et les règles Firestore).");
+  });
+}
+
+function subscribeToCloud() {
+  DOC_REF.onSnapshot(
+    (snap) => {
+      if (snap.exists) {
+        const data = snap.data();
+        if (Array.isArray(data.shipments)) state.shipments = data.shipments;
+        if (data.steps) {
+          if (Array.isArray(data.steps.client) && data.steps.client.length) state.steps.client = data.steps.client;
+          if (Array.isArray(data.steps.transit) && data.steps.transit.length) state.steps.transit = data.steps.transit;
+        }
+        if (Array.isArray(data.documents)) state.documents = data.documents;
+        if (data.lists) {
+          if (Array.isArray(data.lists.clients)) state.lists.clients = data.lists.clients;
+          if (Array.isArray(data.lists.transitaires)) state.lists.transitaires = data.lists.transitaires;
+          if (Array.isArray(data.lists.ports)) state.lists.ports = data.lists.ports;
+        }
+        cacheLocally();
+        setSyncStatus(snap.metadata.fromCache ? "offline" : "synced");
+        render();
+      } else {
+        // Premier lancement : personne n'a encore écrit dans Firestore, on y
+        // pousse l'état local (valeurs par défaut ou cache) pour l'initialiser.
+        pushFullStateToCloud();
+      }
+    },
+    (err) => {
+      console.error("Firestore sync error", err);
+      setSyncStatus("error");
+      alert("Synchronisation impossible : vérifie ta connexion internet et les règles Firestore de ce projet.");
+    }
+  );
 }
 
 function saveShipments() {
-  try { localStorage.setItem(SHIPMENTS_KEY, JSON.stringify(state.shipments)); }
-  catch (e) { alert("La sauvegarde locale a échoué (stockage plein ou navigation privée)."); }
+  cacheLocally();
+  DOC_REF.set({ shipments: state.shipments }, { merge: true })
+    .catch(() => alert("La synchronisation des envois a échoué (vérifie ta connexion)."));
 }
 
 function saveSteps() {
-  try { localStorage.setItem(STEPS_KEY, JSON.stringify(state.steps)); }
-  catch (e) { alert("La sauvegarde locale des étapes a échoué."); }
+  cacheLocally();
+  DOC_REF.set({ steps: state.steps }, { merge: true })
+    .catch(() => alert("La synchronisation des étapes a échoué (vérifie ta connexion)."));
+}
+
+function saveDocuments() {
+  cacheLocally();
+  DOC_REF.set({ documents: state.documents }, { merge: true })
+    .catch(() => alert("La synchronisation des documents a échoué (vérifie ta connexion)."));
+}
+
+function saveLists() {
+  cacheLocally();
+  DOC_REF.set({ lists: state.lists }, { merge: true })
+    .catch(() => alert("La synchronisation des listes a échoué (vérifie ta connexion)."));
+}
+
+function normalizeLink(url) {
+  const u = (url || "").trim();
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u)) return u;
+  return "https://" + u;
 }
 
 // ---------- Logique métier ----------
@@ -310,6 +470,17 @@ function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
   return html;
 }
 
+function docRowHtml(s, doc) {
+  const owner = (s.documents && s.documents[doc]) || null;
+  return `<div class="doc-row">
+    <span class="doc-name">${escapeHtml(doc)}</span>
+    <span class="doc-buttons">
+      <button class="doc-btn ${owner === "Soka" ? "active-soka" : ""}" data-action="set-doc-owner" data-id="${s.id}" data-doc="${escapeHtml(doc)}" data-owner="Soka">Soka</button>
+      <button class="doc-btn ${owner === "Transitaire" ? "active-transit" : ""}" data-action="set-doc-owner" data-id="${s.id}" data-doc="${escapeHtml(doc)}" data-owner="Transitaire">Transitaire</button>
+    </span>
+  </div>`;
+}
+
 function cardHtml(s) {
   const status = overallStatus(s);
   const sc = stampColor(status);
@@ -320,7 +491,7 @@ function cardHtml(s) {
   <div class="card">
     <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
     <button class="client-link" data-action="filter-client" data-client="${escapeHtml(s.client || "")}">${escapeHtml(s.client || "Client sans nom")}</button>
-    <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.pays || "Destination non précisée")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
+    <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.port || s.pays || "Port non précisé")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
 
     <div class="boat-head">
       <div class="status-label" style="color:${sc.text}">${status}</div>
@@ -344,8 +515,20 @@ function cardHtml(s) {
       <div class="stepper-current">${s.transitStepValue ? escapeHtml(s.transitStepValue) : "Pas encore commencé"}</div>
     </div>
 
+    <div class="doc-section">
+      <div class="stepper-label">${icon("file", 13)} Documents</div>
+      ${state.documents.length === 0
+        ? `<div style="font-size:11.5px;color:var(--taupe);">Aucun document configuré (bouton Réglages)</div>`
+        : state.documents.map((doc) => docRowHtml(s, doc)).join("")}
+    </div>
+
+    <div class="comment-section">
+      <div class="stepper-label">${icon("messageSquare", 13)} Commentaire</div>
+      <textarea data-action="update-comment" data-id="${s.id}" placeholder="Note libre…">${escapeHtml(s.comment || "")}</textarea>
+    </div>
+
     <div class="card-footer">
-      ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(s.lien)}" target="_blank" rel="noopener noreferrer">${icon("externalLink", 13)} Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
+      ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(normalizeLink(s.lien))}" target="_blank" rel="noopener noreferrer">${icon("externalLink", 13)} Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
       <button class="delete-btn" title="Supprimer" data-action="delete-shipment" data-id="${s.id}">${icon("trash", 14)}</button>
     </div>
   </div>`;
@@ -393,48 +576,107 @@ function deleteShipment(id) {
   render();
 }
 
+function setDocumentOwner(id, doc, owner) {
+  const s = state.shipments.find((x) => x.id === id);
+  if (!s) return;
+  if (!s.documents) s.documents = {};
+  if (s.documents[doc] === owner) delete s.documents[doc];
+  else s.documents[doc] = owner;
+  saveShipments();
+  render();
+}
+
+function updateComment(id, value) {
+  const s = state.shipments.find((x) => x.id === id);
+  if (!s) return;
+  s.comment = value;
+  saveShipments();
+  // Pas de render() ici : on garde le focus dans le champ pendant la saisie.
+}
+
 // ---------- Modales ----------
 function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+
+function selectFieldHtml(label, listKey, selectId, newInputId) {
+  const options = state.lists[listKey].map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+  return `
+  <div class="field">
+    <label>${label}</label>
+    <select id="${selectId}" data-action="toggle-new-field" data-target="${newInputId}">
+      <option value="">— Sélectionner —</option>
+      ${options}
+      <option value="__new__">+ Nouveau…</option>
+    </select>
+    <input id="${newInputId}" type="text" placeholder="Nouveau : saisir la valeur" style="display:none; margin-top:6px;" />
+  </div>`;
+}
 
 function openNew() {
   document.getElementById("modal-root").innerHTML = `
   <div class="modal-overlay" data-action="overlay-close">
     <div class="modal">
       <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
-      <div class="field"><label>Client</label><input id="f-client" /></div>
-      <div class="field"><label>Transitaire</label><input id="f-transitaire" /></div>
-      <div class="field"><label>Pays de destination</label><input id="f-pays" /></div>
+      ${selectFieldHtml("Client", "clients", "f-client", "f-client-new")}
+      ${selectFieldHtml("Transitaire", "transitaires", "f-transitaire", "f-transitaire-new")}
+      ${selectFieldHtml("Port de destination", "ports", "f-port", "f-port-new")}
       <div class="field"><label>Référence envoi</label><input id="f-ref" /></div>
-      <div class="field"><label>Lien dossier Moovapps</label><input id="f-lien" /></div>
+      <div class="field"><label>Lien dossier Moovapps</label><input id="f-lien" placeholder="https://…" /></div>
       <button class="modal-submit" data-action="submit-new">Ajouter l'envoi</button>
     </div>
   </div>`;
 }
 
+function resolveFieldValue(selectId, newInputId, listKey) {
+  const select = document.getElementById(selectId);
+  let value = select.value;
+  if (value === "__new__") {
+    const newVal = document.getElementById(newInputId).value.trim();
+    if (newVal) {
+      if (!state.lists[listKey].includes(newVal)) state.lists[listKey].push(newVal);
+      value = newVal;
+    } else {
+      value = "";
+    }
+  }
+  return value;
+}
+
 function submitNew() {
-  const client = document.getElementById("f-client").value.trim();
+  const client = resolveFieldValue("f-client", "f-client-new", "clients");
   if (!client) return;
+  const transitaire = resolveFieldValue("f-transitaire", "f-transitaire-new", "transitaires");
+  const port = resolveFieldValue("f-port", "f-port-new", "ports");
   const s = {
     id: uid(),
     client,
-    transitaire: document.getElementById("f-transitaire").value.trim(),
-    pays: document.getElementById("f-pays").value.trim(),
+    transitaire,
+    port,
     ref: document.getElementById("f-ref").value.trim(),
-    lien: document.getElementById("f-lien").value.trim(),
+    lien: normalizeLink(document.getElementById("f-lien").value),
     date: "",
     clientStepValue: "",
     transitStepValue: "",
+    documents: {},
+    comment: "",
     createdAt: Date.now(),
   };
   state.shipments = [s, ...state.shipments];
   saveShipments();
+  saveLists();
   closeModal();
   render();
 }
 
 // ---------- Réglages : étapes éditables ----------
 function openSettings() {
-  draftSteps = { client: [...state.steps.client], transit: [...state.steps.transit] };
+  draftSteps = {
+    client: [...state.steps.client],
+    transit: [...state.steps.transit],
+    documents: [...state.documents],
+    clients: [...state.lists.clients],
+    transitaires: [...state.lists.transitaires],
+    ports: [...state.lists.ports],
+  };
   renderSettingsModal();
 }
 
@@ -442,8 +684,8 @@ function renderSettingsModal() {
   document.getElementById("modal-root").innerHTML = `
   <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide">
-      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
-      <div class="modal-note">Ajoute, renomme, réordonne ou supprime les étapes. L'ordre détermine la progression du bateau.</div>
+      <div class="modal-head"><h2>Réglages</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
+      <div class="modal-note">Étapes : l'ordre détermine la progression du bateau. Documents, Clients, Transitaires, Ports : listes proposées sur les fiches et dans le formulaire "Nouvel envoi".</div>
       <div class="settings-columns">
         <div class="settings-col">
           <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
@@ -455,12 +697,36 @@ function renderSettingsModal() {
           <div id="settings-transit"></div>
           <button class="add-step-btn" data-action="add-step" data-type="transit">+ Ajouter une étape</button>
         </div>
+        <div class="settings-col">
+          <h3>${icon("file", 13, "margin-right:4px;")}Documents</h3>
+          <div id="settings-documents"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="documents">+ Ajouter un document</button>
+        </div>
+        <div class="settings-col">
+          <h3>${icon("mapPin", 13, "margin-right:4px;")}Clients</h3>
+          <div id="settings-clients"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="clients">+ Ajouter un client</button>
+        </div>
+        <div class="settings-col">
+          <h3>${icon("truck", 13, "margin-right:4px;")}Transitaires</h3>
+          <div id="settings-transitaires"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="transitaires">+ Ajouter un transitaire</button>
+        </div>
+        <div class="settings-col">
+          <h3>${icon("anchor", 13, "margin-right:4px;")}Ports de destination</h3>
+          <div id="settings-ports"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="ports">+ Ajouter un port</button>
+        </div>
       </div>
-      <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" data-action="save-settings">Enregistrer les étapes</button>
+      <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" data-action="save-settings">Enregistrer</button>
     </div>
   </div>`;
   renderStepEditColumn("client");
   renderStepEditColumn("transit");
+  renderStepEditColumn("documents");
+  renderStepEditColumn("clients");
+  renderStepEditColumn("transitaires");
+  renderStepEditColumn("ports");
 }
 
 function renderStepEditColumn(type) {
@@ -478,7 +744,8 @@ function renderStepEditColumn(type) {
 function updateDraftStep(type, i, value) { draftSteps[type][i] = value; }
 function addDraftStep(type) { draftSteps[type].push("Nouvelle étape"); renderStepEditColumn(type); }
 function removeDraftStep(type, i) {
-  if (draftSteps[type].length <= 1) { alert("Il faut garder au moins une étape."); return; }
+  const requiresMinOne = type === "client" || type === "transit";
+  if (requiresMinOne && draftSteps[type].length <= 1) { alert("Il faut garder au moins une étape."); return; }
   draftSteps[type].splice(i, 1);
   renderStepEditColumn(type);
 }
@@ -493,10 +760,20 @@ function saveSettings() {
   const clean = (arr) => arr.map((s) => s.trim()).filter((s) => s.length > 0);
   const client = clean(draftSteps.client);
   const transit = clean(draftSteps.transit);
-  if (client.length === 0 || transit.length === 0) { alert("Chaque liste doit contenir au moins une étape."); return; }
+  const documents = clean(draftSteps.documents || []);
+  const clients = clean(draftSteps.clients || []);
+  const transitaires = clean(draftSteps.transitaires || []);
+  const ports = clean(draftSteps.ports || []);
+  if (client.length === 0 || transit.length === 0) { alert("Chaque liste d'étapes doit contenir au moins une étape."); return; }
   state.steps.client = client;
   state.steps.transit = transit;
+  state.documents = documents;
+  state.lists.clients = clients;
+  state.lists.transitaires = transitaires;
+  state.lists.ports = ports;
   saveSteps();
+  saveDocuments();
+  saveLists();
   closeModal();
   render();
 }
@@ -513,6 +790,7 @@ function handleDelegatedClick(e) {
     case "filter-client": filterByClient(el.dataset.client); break;
     case "set-step": setStep(el.dataset.id, el.dataset.type, el.dataset.value); break;
     case "delete-shipment": deleteShipment(el.dataset.id); break;
+    case "set-doc-owner": setDocumentOwner(el.dataset.id, el.dataset.doc, el.dataset.owner); break;
     case "open-new": openNew(); break;
     case "submit-new": submitNew(); break;
     case "open-settings": openSettings(); break;
@@ -527,17 +805,30 @@ function handleDelegatedClick(e) {
 
 function handleDelegatedInput(e) {
   const el = e.target;
-  if (el.dataset && el.dataset.action === "update-step-text") {
+  if (!el.dataset) return;
+  if (el.dataset.action === "update-step-text") {
     updateDraftStep(el.dataset.type, Number(el.dataset.index), el.value);
+  } else if (el.dataset.action === "update-comment") {
+    updateComment(el.dataset.id, el.value);
+  }
+}
+
+function handleDelegatedChange(e) {
+  const el = e.target;
+  if (el.dataset && el.dataset.action === "toggle-new-field") {
+    const target = document.getElementById(el.dataset.target);
+    if (target) target.style.display = el.value === "__new__" ? "block" : "none";
   }
 }
 
 document.addEventListener("click", handleDelegatedClick);
 document.addEventListener("input", handleDelegatedInput);
+document.addEventListener("change", handleDelegatedChange);
 
 // ---------- Initialisation ----------
-loadState();
+loadFromLocalCache();
 render();
+subscribeToCloud();
 
 </script>
 </body>
