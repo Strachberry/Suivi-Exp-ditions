@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Registre des expéditions – SOKA</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #16233D;
+  --blue: #2C5F8A;
+  --blue-soft: #4A6E8A;
+  --ochre: #B98D4F;
+  --khaki: #6B7F4F;
+  --khaki-dark: #5A6E42;
+  --taupe: #8A7F63;
+  --paper: #F1ECDF;
+  --cream: #F7F4EB;
+  --bg: #EFE9DC;
+  --line: #DCD5C2;
+  --ink: #1F2A24;
+  --muted: #6B6250;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: 'IBM Plex Sans', Arial, sans-serif;
+  color: var(--ink);
+}
+.display { font-family: 'Oswald', Arial, sans-serif; }
+.mono { font-family: 'IBM Plex Mono', 'Consolas', monospace; }
+
+header {
+  background: var(--navy);
+  padding: 22px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+header h1 { font-size: 22px; color: var(--paper); letter-spacing: 0.04em; text-transform: uppercase; margin: 0; }
+header .subtitle { font-size: 12px; color: #8FA0BE; margin-top: 2px; }
+
+.header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  display: flex; align-items: center; gap: 6px; border: none; border-radius: 3px;
+  padding: 9px 14px; font-family: 'Oswald', Arial, sans-serif; font-size: 12.5px;
+  letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+}
+.btn:hover { transform: translateY(-1px); opacity: 0.92; }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--ochre); color: var(--navy); }
+.btn-outline { background: transparent; color: var(--paper); border: 1px solid var(--blue-soft); }
+.btn-ghost { background: transparent; color: var(--paper); border: 1px solid rgba(241,236,223,0.35); }
+
+.toolbar { display: flex; gap: 8px; padding: 16px 24px 0; flex-wrap: wrap; align-items: center; }
+.chip {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); font-size: 11.5px; font-family: 'Oswald', Arial, sans-serif;
+  letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.chip.active { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.chip.client-active { border-color: var(--blue); background: var(--blue); color: var(--paper); display:flex; align-items:center; gap:5px; }
+
+main { padding: 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.empty {
+  text-align: center; padding: 60px 20px; color: var(--taupe); font-family: 'Oswald', Arial, sans-serif;
+  font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.empty .sub { font-family: 'IBM Plex Sans', Arial, sans-serif; text-transform: none; letter-spacing: normal; font-size: 12.5px; margin-top: 6px; }
+
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 18px 18px 14px; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+.card:hover { box-shadow: 0 4px 14px rgba(22,35,61,0.10); transform: translateY(-2px); }
+.ref { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.client-link {
+  background: none; border: none; padding: 0; cursor: pointer; font-family: 'Oswald', Arial, sans-serif;
+  font-size: 14.5px; color: #8A6A3B; text-decoration: underline dotted; text-underline-offset: 3px;
+  margin-bottom: 4px; display: block;
+}
+.meta { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+.boat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.status-label { font-family: 'Oswald', Arial, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
+.phase-text { font-size: 11.5px; color: var(--muted); }
+.lane { position: relative; height: 46px; border-radius: 6px; background: linear-gradient(180deg,#DEE6EC 0%,#C2D3DE 100%); overflow: hidden; margin-bottom: 14px; }
+.lane .dash { position: absolute; left: 0; right: 0; top: 58%; border-top: 2px dashed rgba(31,42,36,0.25); }
+.lane .port { position: absolute; top: 50%; transform: translateY(-50%); color: var(--blue-soft); font-size: 15px; }
+.lane .boat { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.5s cubic-bezier(0.22, 1, 0.36, 1); font-size: 22px; }
+
+.stepper { margin-bottom: 10px; }
+.stepper-label { display: flex; align-items: center; gap: 6px; font-family: 'Oswald', Arial, sans-serif; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.steps-row { display: flex; align-items: center; }
+.step-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--line); background: var(--paper); cursor: pointer; padding: 0; transition: transform .15s, background .15s; }
+.step-dot.current { transform: scale(1.25); }
+.step-connector { flex: 1; height: 2px; background: var(--line); }
+.stepper-current { font-size: 11.5px; color: #3A362C; margin-top: 5px; }
+
+.card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.moovapps-link { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink); text-decoration: none; }
+.no-link { font-size: 12px; color: #B3AC98; }
+.delete-btn { background: none; border: none; cursor: pointer; color: #B3AC98; padding: 4px; font-size: 14px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(22,35,61,0.55); display: flex; align-items: center;
+  justify-content: center; z-index: 50; padding: 16px;
+  animation: overlay-in 0.15s ease;
+}
+.modal {
+  background: var(--cream); border-radius: 4px; padding: 24px; width: 100%; max-width: 460px;
+  border: 1px solid var(--line); max-height: 88vh; overflow-y: auto;
+  animation: modal-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal.wide { max-width: 640px; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-head h2 { font-family: 'Oswald', Arial, sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+.close-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field textarea { width: 100%; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-family: 'IBM Plex Sans', Arial, sans-serif; }
+.field textarea { font-family: 'IBM Plex Mono', monospace; min-height: 110px; resize: vertical; }
+.modal-note { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+.modal-submit { width: 100%; margin-top: 6px; padding: 10px 0; background: var(--ink); color: var(--paper); border: none; border-radius: 3px; font-family: 'Oswald', Arial, sans-serif; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.warning-box { margin-top: 10px; padding: 10px; background: #F3E8D9; border: 1px solid var(--line); border-radius: 3px; font-size: 11.5px; color: #7A5A2C; }
+.import-result { margin-top: 10px; font-size: 12.5px; color: var(--khaki-dark); }
+
+.storage-note { margin: 0 24px; font-size: 11.5px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px; }
+
+.settings-columns { display: flex; gap: 20px; flex-wrap: wrap; }
+.settings-col { flex: 1; min-width: 220px; }
+.settings-col h3 { font-family: 'Oswald', Arial, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 8px; }
+.step-edit-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.step-edit-row input { flex: 1; padding: 6px 8px; border-radius: 3px; border: 1px solid var(--line); font-size: 12.5px; }
+.icon-btn { background: none; border: 1px solid var(--line); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 4px 6px; color: var(--muted); }
+.add-step-btn { margin-top: 4px; background: none; border: 1px dashed var(--line); border-radius: 3px; padding: 6px 10px; font-size: 12px; color: var(--muted); cursor: pointer; width: 100%; }
+
+@media (max-width: 480px) {
+  header { padding: 16px; }
+  main { padding: 16px; }
+  .storage-note { margin: 0 16px; }
+  .toolbar { padding: 12px 16px 0; }
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Registre des expéditions</h1>
+    <div class="subtitle">Suivi client · Suivi transitaire · Accès Moovapps</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" data-action="open-settings"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Étapes</button>
+    <button class="btn btn-primary" data-action="open-new"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nouvel envoi</button>
+  </div>
+</header>
+
+<div class="storage-note">
+  Les données restent dans ce navigateur (localStorage), sur cet appareil.
+</div>
+
+<div class="toolbar" id="toolbar"></div>
+
+<main>
+  <div id="content"></div>
+</main>
+
+<div id="modal-root"></div>
+
+<script>
+// ===== Registre des expéditions — SOKA =====
+// Aucune dépendance externe. Toutes les données restent dans ce navigateur
+// (localStorage) de cet appareil.
+// Les interactions passent par des attributs data-action + une délégation
+// d'évènements unique (plus robuste que des onclick="" avec du texte
+// utilisateur inséré dedans, qui cassaient dès qu'un nom contenait
+// une apostrophe ou un guillemet).
+
+const DEFAULT_CLIENT_STEPS = ["Commande reçue", "Documents transmis", "Expédié", "Dédouané", "Livré"];
+const DEFAULT_TRANSIT_STEPS = ["Pris en charge", "En transport", "En dédouanement", "Livraison finale", "Confirmé"];
+
+const SHIPMENTS_KEY = "soka-shipments-v1";
+const STEPS_KEY = "soka-steps-v1";
+
+let state = {
+  shipments: [],
+  steps: { client: [...DEFAULT_CLIENT_STEPS], transit: [...DEFAULT_TRANSIT_STEPS] },
+  filter: "TOUS",
+  clientFilter: null,
+};
+
+let draftSteps = null; // édition en cours dans la fenêtre Réglages
+
+function uid() {
+  return "exp_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function escapeHtml(str) {
+  return (str || "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+// ---------- Icônes SVG inline (aucune dépendance externe) ----------
+const ICON_PATHS = {
+  package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  truck: '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  mapPin: '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+  externalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  ship: '<path d="M12 10.189V14"/><path d="M12 2v3"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-8.188-3.639a2 2 0 0 0-1.624 0L3 14a11.6 11.6 0 0 0 2.81 7.76"/><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+  anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" x2="12" y1="22" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+  flag: '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 8 2a6 6 0 0 0 3.6-1.2A1 1 0 0 1 21 3.4v10.8a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+  checkCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  alertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+  chevronUp: '<path d="m18 15-6-6-6 6"/>',
+  chevronDown: '<path d="m6 9 6 6 6-6"/>',
+};
+
+function icon(name, size = 16, extraStyle = "") {
+  const paths = ICON_PATHS[name] || "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extraStyle}">${paths}</svg>`;
+}
+
+// ---------- Persistance ----------
+function loadState() {
+  try {
+    const rawShipments = localStorage.getItem(SHIPMENTS_KEY);
+    state.shipments = rawShipments ? JSON.parse(rawShipments) : [];
+  } catch (e) { state.shipments = []; }
+
+  try {
+    const rawSteps = localStorage.getItem(STEPS_KEY);
+    if (rawSteps) {
+      const parsed = JSON.parse(rawSteps);
+      if (Array.isArray(parsed.client) && parsed.client.length) state.steps.client = parsed.client;
+      if (Array.isArray(parsed.transit) && parsed.transit.length) state.steps.transit = parsed.transit;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
+}
+
+function saveShipments() {
+  try { localStorage.setItem(SHIPMENTS_KEY, JSON.stringify(state.shipments)); }
+  catch (e) { alert("La sauvegarde locale a échoué (stockage plein ou navigation privée)."); }
+}
+
+function saveSteps() {
+  try { localStorage.setItem(STEPS_KEY, JSON.stringify(state.steps)); }
+  catch (e) { alert("La sauvegarde locale des étapes a échoué."); }
+}
+
+// ---------- Logique métier ----------
+function overallStatus(s) {
+  const c = state.steps.client.indexOf(s.clientStepValue || "");
+  const t = state.steps.transit.indexOf(s.transitStepValue || "");
+  const cDone = c === state.steps.client.length - 1;
+  const tDone = t === state.steps.transit.length - 1;
+  if (cDone && tDone) return "LIVRÉ";
+  if (c === -1 && t === -1) return "NOUVEAU";
+  return "EN TRANSIT";
+}
+
+function stampColor(status) {
+  if (status === "LIVRÉ") return { text: "#5A6E42" };
+  if (status === "NOUVEAU") return { text: "#8A7F63" };
+  return { text: "#2C5F8A" };
+}
+
+function progressFraction(s) {
+  const c = state.steps.client.indexOf(s.clientStepValue || "");
+  const t = state.steps.transit.indexOf(s.transitStepValue || "");
+  const total = state.steps.client.length + state.steps.transit.length;
+  const done = (c + 1) + (t + 1);
+  return total === 0 ? 0 : done / total;
+}
+
+function currentPhaseText(s) {
+  const parts = [];
+  if (s.clientStepValue) parts.push(s.clientStepValue);
+  if (s.transitStepValue) parts.push(s.transitStepValue);
+  return parts.length ? parts.join(" · ") : "En attente de départ";
+}
+
+// ---------- Rendu ----------
+function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
+  const currentIndex = steps.indexOf(currentValue || "");
+  let html = '<div class="steps-row">';
+  steps.forEach((step, i) => {
+    const reached = i <= currentIndex;
+    const isCurrent = i === currentIndex;
+    const targetIndex = isCurrent ? i - 1 : i;
+    const targetValue = targetIndex >= 0 ? steps[targetIndex] : "";
+    html += `<button class="step-dot ${isCurrent ? "current" : ""}" title="${escapeHtml(step)}"
+      style="border-color:${reached ? color : "var(--line)"}; background:${reached ? color : "var(--paper)"};"
+      data-action="set-step" data-id="${shipmentId}" data-type="${type}" data-value="${escapeHtml(targetValue)}"></button>`;
+    if (i < steps.length - 1) {
+      html += `<div class="step-connector" style="background:${i < currentIndex ? color : "var(--line)"};"></div>`;
+    }
+  });
+  html += "</div>";
+  return html;
+}
+
+function cardHtml(s) {
+  const status = overallStatus(s);
+  const sc = stampColor(status);
+  const frac = progressFraction(s);
+  const left = 8 + frac * 84;
+
+  return `
+  <div class="card">
+    <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
+    <button class="client-link" data-action="filter-client" data-client="${escapeHtml(s.client || "")}">${escapeHtml(s.client || "Client sans nom")}</button>
+    <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.pays || "Destination non précisée")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
+
+    <div class="boat-head">
+      <div class="status-label" style="color:${sc.text}">${status}</div>
+      <div class="phase-text">${escapeHtml(currentPhaseText(s))}</div>
+    </div>
+    <div class="lane">
+      <div class="dash"></div>
+      <div class="port" style="left:8px;">${icon("anchor", 14)}</div>
+      <div class="port" style="right:8px;">${icon("flag", 14)}</div>
+      <div class="boat" style="left:${left}%; color:${sc.text};">${icon("ship", 24)}</div>
+    </div>
+
+    <div class="stepper">
+      <div class="stepper-label">${icon("package", 13)} Côté client</div>
+      ${stepsRowHtml(s.id, state.steps.client, s.clientStepValue, "client", "#2C5F8A")}
+      <div class="stepper-current">${s.clientStepValue ? escapeHtml(s.clientStepValue) : "Pas encore commencé"}</div>
+    </div>
+    <div class="stepper">
+      <div class="stepper-label">${icon("truck", 13)} Côté transitaire</div>
+      ${stepsRowHtml(s.id, state.steps.transit, s.transitStepValue, "transit", "#8A6A3B")}
+      <div class="stepper-current">${s.transitStepValue ? escapeHtml(s.transitStepValue) : "Pas encore commencé"}</div>
+    </div>
+
+    <div class="card-footer">
+      ${s.lien ? `<a class="moovapps-link" href="${escapeHtml(s.lien)}" target="_blank" rel="noopener noreferrer">${icon("externalLink", 13)} Dossier Moovapps</a>` : `<span class="no-link">Pas de lien Moovapps</span>`}
+      <button class="delete-btn" title="Supprimer" data-action="delete-shipment" data-id="${s.id}">${icon("trash", 14)}</button>
+    </div>
+  </div>`;
+}
+
+function render() {
+  const toolbar = document.getElementById("toolbar");
+  const filters = ["TOUS", "NOUVEAU", "EN TRANSIT", "LIVRÉ"];
+  toolbar.innerHTML = filters.map((f) =>
+    `<button class="chip ${state.filter === f ? "active" : ""}" data-action="set-filter" data-filter="${f}">${f}</button>`
+  ).join("") + (state.clientFilter
+    ? `<button class="chip client-active" data-action="clear-client-filter">Client : ${escapeHtml(state.clientFilter)} ${icon("x", 12)}</button>`
+    : "");
+
+  const filtered = state.shipments.filter((s) =>
+    (state.filter === "TOUS" || overallStatus(s) === state.filter) &&
+    (!state.clientFilter || s.client === state.clientFilter)
+  );
+
+  const content = document.getElementById("content");
+  if (filtered.length === 0) {
+    content.innerHTML = `<div class="empty">${icon("checkCircle", 28, "opacity:0.5;margin-bottom:10px;")}<div>Aucun envoi ici</div>
+      <div class="sub">Clique sur « Nouvel envoi » pour commencer.</div></div>`;
+  } else {
+    content.innerHTML = `<div class="grid">${filtered.map(cardHtml).join("")}</div>`;
+  }
+}
+
+function setFilter(f) { state.filter = f; render(); }
+function filterByClient(c) { if (c) { state.clientFilter = c; render(); } }
+function clearClientFilter() { state.clientFilter = null; render(); }
+
+function setStep(id, type, value) {
+  const s = state.shipments.find((x) => x.id === id);
+  if (!s) return;
+  if (type === "client") s.clientStepValue = value;
+  else s.transitStepValue = value;
+  saveShipments();
+  render();
+}
+
+function deleteShipment(id) {
+  state.shipments = state.shipments.filter((s) => s.id !== id);
+  saveShipments();
+  render();
+}
+
+// ---------- Modales ----------
+function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+
+function openNew() {
+  document.getElementById("modal-root").innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal">
+      <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
+      <div class="field"><label>Client</label><input id="f-client" /></div>
+      <div class="field"><label>Transitaire</label><input id="f-transitaire" /></div>
+      <div class="field"><label>Pays de destination</label><input id="f-pays" /></div>
+      <div class="field"><label>Référence envoi</label><input id="f-ref" /></div>
+      <div class="field"><label>Lien dossier Moovapps</label><input id="f-lien" /></div>
+      <button class="modal-submit" data-action="submit-new">Ajouter l'envoi</button>
+    </div>
+  </div>`;
+}
+
+function submitNew() {
+  const client = document.getElementById("f-client").value.trim();
+  if (!client) return;
+  const s = {
+    id: uid(),
+    client,
+    transitaire: document.getElementById("f-transitaire").value.trim(),
+    pays: document.getElementById("f-pays").value.trim(),
+    ref: document.getElementById("f-ref").value.trim(),
+    lien: document.getElementById("f-lien").value.trim(),
+    date: "",
+    clientStepValue: "",
+    transitStepValue: "",
+    createdAt: Date.now(),
+  };
+  state.shipments = [s, ...state.shipments];
+  saveShipments();
+  closeModal();
+  render();
+}
+
+// ---------- Réglages : étapes éditables ----------
+function openSettings() {
+  draftSteps = { client: [...state.steps.client], transit: [...state.steps.transit] };
+  renderSettingsModal();
+}
+
+function renderSettingsModal() {
+  document.getElementById("modal-root").innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal wide">
+      <div class="modal-head"><h2>Étapes de suivi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
+      <div class="modal-note">Ajoute, renomme, réordonne ou supprime les étapes. L'ordre détermine la progression du bateau.</div>
+      <div class="settings-columns">
+        <div class="settings-col">
+          <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
+          <div id="settings-client"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="client">+ Ajouter une étape</button>
+        </div>
+        <div class="settings-col">
+          <h3>${icon("truck", 13, "margin-right:4px;")}Étapes côté transitaire</h3>
+          <div id="settings-transit"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="transit">+ Ajouter une étape</button>
+        </div>
+      </div>
+      <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" data-action="save-settings">Enregistrer les étapes</button>
+    </div>
+  </div>`;
+  renderStepEditColumn("client");
+  renderStepEditColumn("transit");
+}
+
+function renderStepEditColumn(type) {
+  const container = document.getElementById(`settings-${type}`);
+  container.innerHTML = draftSteps[type].map((step, i) => `
+    <div class="step-edit-row">
+      <button class="icon-btn" data-action="move-step" data-type="${type}" data-index="${i}" data-dir="-1" ${i === 0 ? "disabled" : ""}>${icon("chevronUp", 12)}</button>
+      <button class="icon-btn" data-action="move-step" data-type="${type}" data-index="${i}" data-dir="1" ${i === draftSteps[type].length - 1 ? "disabled" : ""}>${icon("chevronDown", 12)}</button>
+      <input value="${escapeHtml(step)}" data-action="update-step-text" data-type="${type}" data-index="${i}" />
+      <button class="icon-btn" data-action="remove-step" data-type="${type}" data-index="${i}">${icon("x", 12)}</button>
+    </div>
+  `).join("");
+}
+
+function updateDraftStep(type, i, value) { draftSteps[type][i] = value; }
+function addDraftStep(type) { draftSteps[type].push("Nouvelle étape"); renderStepEditColumn(type); }
+function removeDraftStep(type, i) {
+  if (draftSteps[type].length <= 1) { alert("Il faut garder au moins une étape."); return; }
+  draftSteps[type].splice(i, 1);
+  renderStepEditColumn(type);
+}
+function moveDraftStep(type, i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= draftSteps[type].length) return;
+  [draftSteps[type][i], draftSteps[type][j]] = [draftSteps[type][j], draftSteps[type][i]];
+  renderStepEditColumn(type);
+}
+
+function saveSettings() {
+  const clean = (arr) => arr.map((s) => s.trim()).filter((s) => s.length > 0);
+  const client = clean(draftSteps.client);
+  const transit = clean(draftSteps.transit);
+  if (client.length === 0 || transit.length === 0) { alert("Chaque liste doit contenir au moins une étape."); return; }
+  state.steps.client = client;
+  state.steps.transit = transit;
+  saveSteps();
+  closeModal();
+  render();
+}
+
+// ---------- Délégation d'évènements (clics et saisie) ----------
+function handleDelegatedClick(e) {
+  const el = e.target.closest("[data-action]");
+  if (!el) return;
+  const action = el.dataset.action;
+
+  switch (action) {
+    case "set-filter": setFilter(el.dataset.filter); break;
+    case "clear-client-filter": clearClientFilter(); break;
+    case "filter-client": filterByClient(el.dataset.client); break;
+    case "set-step": setStep(el.dataset.id, el.dataset.type, el.dataset.value); break;
+    case "delete-shipment": deleteShipment(el.dataset.id); break;
+    case "open-new": openNew(); break;
+    case "submit-new": submitNew(); break;
+    case "open-settings": openSettings(); break;
+    case "save-settings": saveSettings(); break;
+    case "add-step": addDraftStep(el.dataset.type); break;
+    case "remove-step": removeDraftStep(el.dataset.type, Number(el.dataset.index)); break;
+    case "move-step": moveDraftStep(el.dataset.type, Number(el.dataset.index), Number(el.dataset.dir)); break;
+    case "close-modal": closeModal(); break;
+    case "overlay-close": if (e.target === el) closeModal(); break;
+  }
+}
+
+function handleDelegatedInput(e) {
+  const el = e.target;
+  if (el.dataset && el.dataset.action === "update-step-text") {
+    updateDraftStep(el.dataset.type, Number(el.dataset.index), el.value);
+  }
+}
+
+document.addEventListener("click", handleDelegatedClick);
+document.addEventListener("input", handleDelegatedInput);
+
+// ---------- Initialisation ----------
+loadState();
+render();
+
+</script>
+</body>
+</html>
