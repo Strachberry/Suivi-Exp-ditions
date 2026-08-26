@@ -91,7 +91,11 @@ main { padding: 24px; }
   font-size: 14.5px; color: #8A6A3B; text-decoration: underline dotted; text-underline-offset: 3px;
   margin-bottom: 4px; display: block;
 }
-.meta { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.meta { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 14px; flex-wrap: wrap; }
+.port-select {
+  font-size: 12px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); background: #fff;
+  font-family: 'IBM Plex Sans', Arial, sans-serif; color: var(--ink); cursor: pointer;
+}
 
 .boat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .status-label { font-family: 'Oswald', Arial, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
@@ -167,6 +171,103 @@ main { padding: 24px; }
   background: #fff; font-size: 12.5px; font-family: 'IBM Plex Sans', Arial, sans-serif; resize: vertical;
 }
 
+/* Frise chronologique */
+.timeline-wrap { padding: 14px 24px 0; }
+.timeline-track { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+.timeline-empty { font-size: 12px; color: var(--taupe); padding: 4px 0 0; }
+.timeline-chip {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--taupe);
+  border-radius: 4px; padding: 8px 12px; cursor: pointer; min-width: 120px; text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.timeline-chip:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(22,35,61,0.12); }
+.timeline-chip.cat-positionnement { border-left-color: var(--taupe); }
+.timeline-chip.cat-chargement { border-left-color: var(--ochre); }
+.timeline-chip.cat-etd { border-left-color: var(--blue); }
+.timeline-chip.cat-termine { border-left-color: var(--khaki); }
+.timeline-date { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--ink); }
+.timeline-ref { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); }
+.timeline-client { font-family: 'Oswald', Arial, sans-serif; font-size: 12px; color: var(--ink); }
+.timeline-milestone { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+
+/* Badge de catégorie sur chaque fiche */
+.milestone-badge {
+  display: inline-block; font-size: 10.5px; padding: 3px 9px; border-radius: 12px;
+  font-family: 'Oswald', Arial, sans-serif; letter-spacing: 0.03em; text-transform: uppercase;
+  margin-bottom: 8px; color: #fff;
+}
+.milestone-badge.milestone-positionnement { background: var(--taupe); }
+.milestone-badge.milestone-chargement { background: var(--ochre); color: var(--navy); }
+.milestone-badge.milestone-etd { background: var(--blue); }
+.milestone-badge.milestone-termine { background: var(--khaki); }
+
+/* Section Dates sur chaque fiche */
+.dates-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.dates-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.date-field label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 2px; }
+.date-field input {
+  width: 100%; padding: 5px 6px; border-radius: 3px; border: 1px solid var(--line); font-size: 12px;
+  font-family: 'IBM Plex Sans', Arial, sans-serif; box-sizing: border-box;
+}
+
+/* Surbrillance temporaire après clic depuis la frise */
+.card-highlight { animation: card-pulse 1.5s ease; }
+@keyframes card-pulse {
+  0% { box-shadow: 0 0 0 3px rgba(44,95,138,0.55); }
+  100% { box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+}
+
+/* Carte des expéditions */
+.map-svg { width: 100%; height: auto; border-radius: 4px; border: 1px solid var(--line); }
+.map-sea { fill: #DEE6EC; }
+.map-grid { stroke: rgba(31,42,36,0.08); stroke-width: 1; }
+.map-equator { stroke: rgba(31,42,36,0.18); stroke-width: 1; stroke-dasharray: 4 3; }
+.map-continent { fill: #C7D6CC; stroke: #AEC0B4; stroke-width: 1; }
+.map-pin { cursor: pointer; }
+.map-pin-dot { fill: var(--blue); stroke: #fff; stroke-width: 1.5; transition: r 0.15s ease; }
+.map-pin:hover .map-pin-dot { r: 9; fill: var(--ochre); }
+.map-pin-count { font-family: 'Oswald', Arial, sans-serif; font-size: 8px; fill: #fff; pointer-events: none; }
+.map-legend { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+.unlocated-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.unlocated-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.unlocated-name { font-size: 12.5px; color: var(--ink); min-width: 120px; flex: 1; }
+.unlocated-row input { width: 90px; padding: 5px 7px; border-radius: 3px; border: 1px solid var(--line); font-size: 12px; }
+
+.port-popover { margin-top: 14px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.port-popover-head {
+  display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;
+  background: var(--navy); color: var(--paper); font-family: 'Oswald', Arial, sans-serif;
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.port-popover-head .close-btn { color: var(--paper); }
+.port-popover-row {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border: none;
+  border-top: 1px solid var(--line); background: #fff; cursor: pointer; text-align: left;
+  transition: background 0.12s ease;
+}
+.port-popover-row:hover { background: var(--paper); }
+.port-popover-ref { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink); }
+.port-popover-client { font-family: 'Oswald', Arial, sans-serif; font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* Écran de code d'accès */
+.gate-overlay {
+  position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center;
+  justify-content: center; z-index: 100; padding: 20px;
+}
+.gate-box { max-width: 340px; width: 100%; text-align: center; }
+.gate-title {
+  font-family: 'Oswald', Arial, sans-serif; font-size: 20px; color: var(--paper); text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 10px;
+}
+.gate-text { font-size: 12.5px; color: #B7C2D6; line-height: 1.5; margin-bottom: 16px; }
+.gate-error { font-size: 12px; color: #EFAFA5; margin-bottom: 10px; }
+.gate-box input {
+  width: 100%; padding: 10px 12px; border-radius: 3px; border: 1px solid var(--blue-soft); background: #fff;
+  font-size: 14px; font-family: 'IBM Plex Mono', monospace; text-align: center; box-sizing: border-box;
+}
+
 @media (max-width: 480px) {
   header { padding: 16px; }
   main { padding: 16px; }
@@ -178,6 +279,8 @@ main { padding: 24px; }
 </head>
 <body>
 
+<div id="access-gate-root"></div>
+
 <header>
   <div>
     <h1>Registre des expéditions</h1>
@@ -185,10 +288,13 @@ main { padding: 24px; }
     <span id="sync-status" class="sync-badge sync-connecting">● Connexion…</span>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" data-action="open-map"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Carte</button>
     <button class="btn btn-ghost" data-action="open-settings"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Réglages</button>
     <button class="btn btn-primary" data-action="open-new"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nouvel envoi</button>
   </div>
 </header>
+
+<div class="timeline-wrap" id="timeline"></div>
 
 <div class="storage-note">
   Les données restent dans ce navigateur (localStorage), sur cet appareil.
@@ -221,12 +327,18 @@ const STEPS_KEY = "soka-steps-v1";
 const DOCUMENTS_KEY = "soka-documents-v1";
 const DEFAULT_DOCUMENTS = ["Facture commerciale", "Liste de colisage", "Certificat d'origine"];
 const LISTS_KEY = "soka-lists-v1";
+const CLIENT_DOCS_KEY = "soka-client-documents-v1";
+const CLIENT_PORTS_KEY = "soka-client-ports-v1";
+const PORT_COORDS_KEY = "soka-port-coords-v1";
 
 let state = {
   shipments: [],
   steps: { client: [...DEFAULT_CLIENT_STEPS], transit: [...DEFAULT_TRANSIT_STEPS] },
   documents: [...DEFAULT_DOCUMENTS],
   lists: { clients: [], transitaires: [], ports: [] },
+  clientDocuments: {}, // { "Nom client": { "Nom document": "Soka" | "Transitaire" } }
+  clientPorts: {}, // { "Nom client": "Nom du port" }
+  portCoordinates: {}, // overrides/ajouts manuels { "Nom du port": { lat, lng } }
   filter: "TOUS",
   clientFilter: null,
 };
@@ -242,7 +354,8 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const DOC_REF = db.collection("suivi-expeditions").doc("data");
+const ACCESS_CODE_KEY = "soka-access-code-v1";
+let DOC_REF = null; // défini une fois le code d'accès validé, voir initWithCode()
 
 let draftSteps = null; // édition en cours dans la fenêtre Réglages
 
@@ -272,6 +385,7 @@ const ICON_PATHS = {
   alertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   chevronUp: '<path d="m18 15-6-6-6 6"/>',
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
+  calendar: '<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>',
   file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
   messageSquare: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
 };
@@ -279,6 +393,54 @@ const ICON_PATHS = {
 function icon(name, size = 16, extraStyle = "") {
   const paths = ICON_PATHS[name] || "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${extraStyle}">${paths}</svg>`;
+}
+
+// ---------- Écran de code d'accès (chaque appareil le saisit une fois) ----------
+function isPermissionError(err) {
+  return !!err && (err.code === "permission-denied" || err.code === "PERMISSION_DENIED");
+}
+
+function showAccessGate(errorMessage) {
+  document.getElementById("access-gate-root").innerHTML = `
+  <div class="gate-overlay">
+    <div class="gate-box">
+      <div class="gate-title">Accès protégé</div>
+      <div class="gate-text">Saisis le code d'accès pour ouvrir le registre des expéditions SOKA. Il ne sera demandé qu'une fois sur cet appareil.</div>
+      ${errorMessage ? `<div class="gate-error">${escapeHtml(errorMessage)}</div>` : ""}
+      <input id="access-code-input" type="text" placeholder="Code d'accès" autocomplete="off"
+        onkeydown="if(event.key==='Enter'){document.getElementById('access-code-submit').click();}" />
+      <button id="access-code-submit" class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:10px;" data-action="submit-access-code">Valider</button>
+    </div>
+  </div>`;
+  const input = document.getElementById("access-code-input");
+  if (input) input.focus();
+}
+
+function hideAccessGate() {
+  document.getElementById("access-gate-root").innerHTML = "";
+}
+
+function submitAccessCode() {
+  const input = document.getElementById("access-code-input");
+  const code = (input.value || "").trim();
+  if (!code) return;
+  localStorage.setItem(ACCESS_CODE_KEY, code);
+  hideAccessGate();
+  initWithCode(code);
+}
+
+function handleWrongCode() {
+  localStorage.removeItem(ACCESS_CODE_KEY);
+  DOC_REF = null;
+  setSyncStatus("error");
+  showAccessGate("Code incorrect — réessaie.");
+}
+
+function initWithCode(code) {
+  DOC_REF = db.collection("suivi-expeditions").doc(code);
+  loadFromLocalCache();
+  render();
+  subscribeToCloud();
 }
 
 // ---------- Persistance : Firestore (source de vérité, synchronisée en
@@ -316,6 +478,30 @@ function loadFromLocalCache() {
       if (Array.isArray(parsed.ports)) state.lists.ports = parsed.ports;
     }
   } catch (e) { /* garde les valeurs par défaut */ }
+
+  try {
+    const rawClientDocs = localStorage.getItem(CLIENT_DOCS_KEY);
+    if (rawClientDocs) {
+      const parsed = JSON.parse(rawClientDocs);
+      if (parsed && typeof parsed === "object") state.clientDocuments = parsed;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
+
+  try {
+    const rawClientPorts = localStorage.getItem(CLIENT_PORTS_KEY);
+    if (rawClientPorts) {
+      const parsed = JSON.parse(rawClientPorts);
+      if (parsed && typeof parsed === "object") state.clientPorts = parsed;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
+
+  try {
+    const rawPortCoords = localStorage.getItem(PORT_COORDS_KEY);
+    if (rawPortCoords) {
+      const parsed = JSON.parse(rawPortCoords);
+      if (parsed && typeof parsed === "object") state.portCoordinates = parsed;
+    }
+  } catch (e) { /* garde les valeurs par défaut */ }
 }
 
 function cacheLocally() {
@@ -324,6 +510,9 @@ function cacheLocally() {
     localStorage.setItem(STEPS_KEY, JSON.stringify(state.steps));
     localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(state.documents));
     localStorage.setItem(LISTS_KEY, JSON.stringify(state.lists));
+    localStorage.setItem(CLIENT_DOCS_KEY, JSON.stringify(state.clientDocuments));
+    localStorage.setItem(CLIENT_PORTS_KEY, JSON.stringify(state.clientPorts));
+    localStorage.setItem(PORT_COORDS_KEY, JSON.stringify(state.portCoordinates));
   } catch (e) { /* stockage plein ou navigation privée : tant pis pour le cache */ }
 }
 
@@ -347,8 +536,12 @@ function pushFullStateToCloud() {
     steps: state.steps,
     documents: state.documents,
     lists: state.lists,
+    clientDocuments: state.clientDocuments,
+    clientPorts: state.clientPorts,
+    portCoordinates: state.portCoordinates,
   }).catch((e) => {
     console.error(e);
+    if (isPermissionError(e)) { handleWrongCode(); return; }
     setSyncStatus("error");
     alert("Impossible d'initialiser la synchronisation (vérifie la connexion et les règles Firestore).");
   });
@@ -370,6 +563,9 @@ function subscribeToCloud() {
           if (Array.isArray(data.lists.transitaires)) state.lists.transitaires = data.lists.transitaires;
           if (Array.isArray(data.lists.ports)) state.lists.ports = data.lists.ports;
         }
+        if (data.clientDocuments && typeof data.clientDocuments === "object") state.clientDocuments = data.clientDocuments;
+        if (data.clientPorts && typeof data.clientPorts === "object") state.clientPorts = data.clientPorts;
+        if (data.portCoordinates && typeof data.portCoordinates === "object") state.portCoordinates = data.portCoordinates;
         cacheLocally();
         setSyncStatus(snap.metadata.fromCache ? "offline" : "synced");
         render();
@@ -381,6 +577,7 @@ function subscribeToCloud() {
     },
     (err) => {
       console.error("Firestore sync error", err);
+      if (isPermissionError(err)) { handleWrongCode(); return; }
       setSyncStatus("error");
       alert("Synchronisation impossible : vérifie ta connexion internet et les règles Firestore de ce projet.");
     }
@@ -390,25 +587,43 @@ function subscribeToCloud() {
 function saveShipments() {
   cacheLocally();
   DOC_REF.set({ shipments: state.shipments }, { merge: true })
-    .catch(() => alert("La synchronisation des envois a échoué (vérifie ta connexion)."));
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des envois a échoué (vérifie ta connexion)."); });
 }
 
 function saveSteps() {
   cacheLocally();
   DOC_REF.set({ steps: state.steps }, { merge: true })
-    .catch(() => alert("La synchronisation des étapes a échoué (vérifie ta connexion)."));
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des étapes a échoué (vérifie ta connexion)."); });
 }
 
 function saveDocuments() {
   cacheLocally();
   DOC_REF.set({ documents: state.documents }, { merge: true })
-    .catch(() => alert("La synchronisation des documents a échoué (vérifie ta connexion)."));
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des documents a échoué (vérifie ta connexion)."); });
 }
 
 function saveLists() {
   cacheLocally();
   DOC_REF.set({ lists: state.lists }, { merge: true })
-    .catch(() => alert("La synchronisation des listes a échoué (vérifie ta connexion)."));
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des listes a échoué (vérifie ta connexion)."); });
+}
+
+function saveClientDocuments() {
+  cacheLocally();
+  DOC_REF.set({ clientDocuments: state.clientDocuments }, { merge: true })
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des documents client a échoué (vérifie ta connexion)."); });
+}
+
+function saveClientPorts() {
+  cacheLocally();
+  DOC_REF.set({ clientPorts: state.clientPorts }, { merge: true })
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation du port client a échoué (vérifie ta connexion)."); });
+}
+
+function savePortCoordinates() {
+  cacheLocally();
+  DOC_REF.set({ portCoordinates: state.portCoordinates }, { merge: true })
+    .catch((e) => { if (isPermissionError(e)) { handleWrongCode(); return; } alert("La synchronisation des coordonnées a échoué (vérifie ta connexion)."); });
 }
 
 function normalizeLink(url) {
@@ -450,6 +665,117 @@ function currentPhaseText(s) {
   return parts.length ? parts.join(" · ") : "En attente de départ";
 }
 
+// ---------- Carte : base de ports connus (positions approximatives) ----------
+const PORT_DB = [
+  { lat: 49.49, lng: 0.11, aliases: ["le havre", "havre"] },
+  { lat: 43.30, lng: 5.37, aliases: ["marseille", "marseille fos", "fos-sur-mer", "fos sur mer"] },
+  { lat: 51.92, lng: 4.48, aliases: ["rotterdam"] },
+  { lat: 51.22, lng: 4.40, aliases: ["anvers", "antwerp", "antwerpen"] },
+  { lat: 53.55, lng: 9.99, aliases: ["hambourg", "hamburg"] },
+  { lat: 44.41, lng: 8.93, aliases: ["genes", "genova", "genoa", "gênes"] },
+  { lat: 41.35, lng: 2.15, aliases: ["barcelone", "barcelona"] },
+  { lat: 39.44, lng: -0.31, aliases: ["valence", "valencia"] },
+  { lat: 36.13, lng: -5.44, aliases: ["algesiras", "algeciras"] },
+  { lat: 43.55, lng: 10.31, aliases: ["livourne", "livorno"] },
+  { lat: 45.65, lng: 13.77, aliases: ["trieste"] },
+  { lat: 31.20, lng: 29.92, aliases: ["alexandrie", "alexandria"] },
+  { lat: 31.26, lng: 32.30, aliases: ["port-said", "port said"] },
+  { lat: 33.90, lng: 35.51, aliases: ["beyrouth", "beirut"] },
+  { lat: 38.42, lng: 27.14, aliases: ["izmir"] },
+  { lat: 41.01, lng: 28.98, aliases: ["istanbul"] },
+  { lat: 21.49, lng: 39.19, aliases: ["djeddah", "jeddah"] },
+  { lat: 24.98, lng: 55.06, aliases: ["dubai", "jebel ali"] },
+  { lat: 31.23, lng: 121.47, aliases: ["shanghai"] },
+  { lat: 29.87, lng: 121.55, aliases: ["ningbo"] },
+  { lat: 22.54, lng: 114.06, aliases: ["shenzhen"] },
+  { lat: 22.28, lng: 114.16, aliases: ["hong kong", "hongkong"] },
+  { lat: 35.18, lng: 129.08, aliases: ["busan"] },
+  { lat: 35.44, lng: 139.64, aliases: ["yokohama"] },
+  { lat: 22.62, lng: 120.31, aliases: ["kaohsiung"] },
+  { lat: 10.82, lng: 106.63, aliases: ["ho chi minh", "hochiminh", "saigon"] },
+  { lat: 13.09, lng: 100.88, aliases: ["bangkok", "laem chabang"] },
+  { lat: -6.10, lng: 106.86, aliases: ["jakarta"] },
+  { lat: 14.58, lng: 120.98, aliases: ["manille", "manila"] },
+  { lat: 6.93, lng: 79.85, aliases: ["colombo"] },
+  { lat: 13.08, lng: 80.29, aliases: ["chennai"] },
+  { lat: 18.95, lng: 72.95, aliases: ["mumbai", "nhava sheva"] },
+  { lat: 40.67, lng: -74.00, aliases: ["new york", "newark"] },
+  { lat: 29.75, lng: -95.36, aliases: ["houston"] },
+  { lat: 33.74, lng: -118.26, aliases: ["los angeles"] },
+  { lat: -23.96, lng: -46.33, aliases: ["santos"] },
+  { lat: -34.60, lng: -58.37, aliases: ["buenos aires"] },
+  { lat: 19.19, lng: -96.13, aliases: ["veracruz"] },
+  { lat: 33.61, lng: -7.62, aliases: ["casablanca"] },
+  { lat: 35.88, lng: -5.51, aliases: ["tanger med", "tanger"] },
+  { lat: 6.45, lng: 3.39, aliases: ["lagos"] },
+  { lat: -29.87, lng: 31.02, aliases: ["durban"] },
+  { lat: -4.05, lng: 39.66, aliases: ["mombasa"] },
+  { lat: -33.85, lng: 151.21, aliases: ["sydney"] },
+  { lat: -37.84, lng: 144.94, aliases: ["melbourne"] },
+  { lat: -36.84, lng: 174.77, aliases: ["auckland"] },
+];
+
+function normalizeStr(s) {
+  return (s || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function lookupPortCoords(portName) {
+  if (!portName) return null;
+  if (state.portCoordinates[portName]) return state.portCoordinates[portName];
+  const norm = normalizeStr(portName);
+  const found = PORT_DB.find((p) => p.aliases.includes(norm));
+  return found ? { lat: found.lat, lng: found.lng } : null;
+}
+
+function latLngToXY(lat, lng) {
+  return { x: ((lng + 180) / 360) * 1000, y: ((90 - lat) / 180) * 500 };
+}
+
+// ---------- Dates & catégorie du dossier (Positionnement / Chargement / ETD) ----------
+function dossierCategory(s) {
+  if (!s.datePositionnement) return { key: "positionnement", label: "En attente de Positionnement" };
+  if (!s.dateCloture) return { key: "chargement", label: "En attente de chargement" };
+  if (!s.dateETD) return { key: "etd", label: "En attente d'ETD" };
+  return { key: "termine", label: "ETD effectué" };
+}
+
+function currentMilestone(s) {
+  if (s.dateETA) return { label: "ETA", date: s.dateETA };
+  if (s.dateETD) return { label: "ETD", date: s.dateETD };
+  if (s.dateCloture) return { label: "Clôture", date: s.dateCloture };
+  if (s.datePositionnement) return { label: "Positionnement", date: s.datePositionnement };
+  return null;
+}
+
+function formatDateFr(iso) {
+  const parts = (iso || "").split("-");
+  if (parts.length !== 3) return iso || "";
+  return `${parts[2]}/${parts[1]}`;
+}
+
+function dateFieldsHtml(s) {
+  const fields = [
+    { key: "datePositionnement", label: "Positionnement" },
+    { key: "dateCloture", label: "Clôture" },
+    { key: "dateETD", label: "ETD" },
+    { key: "dateETA", label: "ETA" },
+  ];
+  return fields
+    .map(
+      (f) => `
+    <div class="date-field">
+      <label>${f.label}</label>
+      <input type="date" value="${escapeHtml(s[f.key] || "")}" data-action="update-date" data-id="${s.id}" data-field="${f.key}" />
+    </div>`
+    )
+    .join("");
+}
+
 // ---------- Rendu ----------
 function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
   const currentIndex = steps.indexOf(currentValue || "");
@@ -470,13 +796,33 @@ function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
   return html;
 }
 
-function docRowHtml(s, doc) {
-  const owner = (s.documents && s.documents[doc]) || null;
+function portSelectorHtml(clientName) {
+  const current = state.clientPorts[clientName] || "";
+  const options = state.lists.ports
+    .map((p) => `<option value="${escapeHtml(p)}" ${p === current ? "selected" : ""}>${escapeHtml(p)}</option>`)
+    .join("");
+  return `<select class="port-select" data-action="set-client-port" data-client="${escapeHtml(clientName)}">
+    <option value="">— Port —</option>
+    ${options}
+  </select>`;
+}
+
+function setClientPort(clientName, port) {
+  if (!clientName) return;
+  if (port) state.clientPorts[clientName] = port;
+  else delete state.clientPorts[clientName];
+  saveClientPorts();
+  render();
+}
+
+function docRowHtml(clientName, doc) {
+  const bucket = state.clientDocuments[clientName] || {};
+  const owner = bucket[doc] || null;
   return `<div class="doc-row">
     <span class="doc-name">${escapeHtml(doc)}</span>
     <span class="doc-buttons">
-      <button class="doc-btn ${owner === "Soka" ? "active-soka" : ""}" data-action="set-doc-owner" data-id="${s.id}" data-doc="${escapeHtml(doc)}" data-owner="Soka">Soka</button>
-      <button class="doc-btn ${owner === "Transitaire" ? "active-transit" : ""}" data-action="set-doc-owner" data-id="${s.id}" data-doc="${escapeHtml(doc)}" data-owner="Transitaire">Transitaire</button>
+      <button class="doc-btn ${owner === "Soka" ? "active-soka" : ""}" data-action="set-doc-owner" data-client="${escapeHtml(clientName)}" data-doc="${escapeHtml(doc)}" data-owner="Soka">Soka</button>
+      <button class="doc-btn ${owner === "Transitaire" ? "active-transit" : ""}" data-action="set-doc-owner" data-client="${escapeHtml(clientName)}" data-doc="${escapeHtml(doc)}" data-owner="Transitaire">Transitaire</button>
     </span>
   </div>`;
 }
@@ -486,12 +832,14 @@ function cardHtml(s) {
   const sc = stampColor(status);
   const frac = progressFraction(s);
   const left = 8 + frac * 84;
+  const cat = dossierCategory(s);
 
   return `
-  <div class="card">
+  <div class="card" id="shipment-${s.id}">
+    <div class="milestone-badge milestone-${cat.key}">${cat.label}</div>
     <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
     <button class="client-link" data-action="filter-client" data-client="${escapeHtml(s.client || "")}">${escapeHtml(s.client || "Client sans nom")}</button>
-    <div class="meta">${icon("mapPin", 12)} ${escapeHtml(s.port || s.pays || "Port non précisé")} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
+    <div class="meta">${icon("mapPin", 12)} ${s.client ? portSelectorHtml(s.client) : `<span>Port non précisé</span>`} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
 
     <div class="boat-head">
       <div class="status-label" style="color:${sc.text}">${status}</div>
@@ -515,11 +863,18 @@ function cardHtml(s) {
       <div class="stepper-current">${s.transitStepValue ? escapeHtml(s.transitStepValue) : "Pas encore commencé"}</div>
     </div>
 
+    <div class="dates-section">
+      <div class="stepper-label">${icon("calendar", 13)} Dates</div>
+      <div class="dates-grid">${dateFieldsHtml(s)}</div>
+    </div>
+
     <div class="doc-section">
-      <div class="stepper-label">${icon("file", 13)} Documents</div>
+      <div class="stepper-label">${icon("file", 13)} Documents du client</div>
       ${state.documents.length === 0
         ? `<div style="font-size:11.5px;color:var(--taupe);">Aucun document configuré (bouton Réglages)</div>`
-        : state.documents.map((doc) => docRowHtml(s, doc)).join("")}
+        : !s.client
+        ? `<div style="font-size:11.5px;color:var(--taupe);">Renseigne un client pour gérer ses documents</div>`
+        : state.documents.map((doc) => docRowHtml(s.client, doc)).join("")}
     </div>
 
     <div class="comment-section">
@@ -534,7 +889,34 @@ function cardHtml(s) {
   </div>`;
 }
 
+function renderTimeline() {
+  const el = document.getElementById("timeline");
+  if (!el) return;
+  const entries = state.shipments
+    .map((s) => ({ s, m: currentMilestone(s) }))
+    .filter((e) => e.m);
+  entries.sort((a, b) => a.m.date.localeCompare(b.m.date));
+
+  if (entries.length === 0) {
+    el.innerHTML = `<div class="timeline-empty">Aucun dossier daté pour l'instant — renseigne une date sur une fiche pour qu'elle apparaisse ici.</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="timeline-track">${entries
+    .map(({ s, m }) => {
+      const cat = dossierCategory(s);
+      return `<button class="timeline-chip cat-${cat.key}" data-action="scroll-to-shipment" data-id="${s.id}">
+        <span class="timeline-date">${formatDateFr(m.date)}</span>
+        <span class="timeline-ref">${escapeHtml(s.ref || s.id.toUpperCase())}</span>
+        <span class="timeline-client">${escapeHtml(s.client || "")}</span>
+        <span class="timeline-milestone">${m.label}</span>
+      </button>`;
+    })
+    .join("")}</div>`;
+}
+
 function render() {
+  renderTimeline();
   const toolbar = document.getElementById("toolbar");
   const filters = ["TOUS", "NOUVEAU", "EN TRANSIT", "LIVRÉ"];
   toolbar.innerHTML = filters.map((f) =>
@@ -576,13 +958,13 @@ function deleteShipment(id) {
   render();
 }
 
-function setDocumentOwner(id, doc, owner) {
-  const s = state.shipments.find((x) => x.id === id);
-  if (!s) return;
-  if (!s.documents) s.documents = {};
-  if (s.documents[doc] === owner) delete s.documents[doc];
-  else s.documents[doc] = owner;
-  saveShipments();
+function setDocumentOwner(clientName, doc, owner) {
+  if (!clientName) return;
+  if (!state.clientDocuments[clientName]) state.clientDocuments[clientName] = {};
+  const bucket = state.clientDocuments[clientName];
+  if (bucket[doc] === owner) delete bucket[doc];
+  else bucket[doc] = owner;
+  saveClientDocuments();
   render();
 }
 
@@ -592,6 +974,14 @@ function updateComment(id, value) {
   s.comment = value;
   saveShipments();
   // Pas de render() ici : on garde le focus dans le champ pendant la saisie.
+}
+
+function updateDate(id, field, value) {
+  const s = state.shipments.find((x) => x.id === id);
+  if (!s) return;
+  s[field] = value;
+  saveShipments();
+  render();
 }
 
 // ---------- Modales ----------
@@ -618,7 +1008,7 @@ function openNew() {
       <div class="modal-head"><h2>Nouvel envoi</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
       ${selectFieldHtml("Client", "clients", "f-client", "f-client-new")}
       ${selectFieldHtml("Transitaire", "transitaires", "f-transitaire", "f-transitaire-new")}
-      ${selectFieldHtml("Port de destination", "ports", "f-port", "f-port-new")}
+      <div class="modal-note" style="margin-bottom:12px;">Le port de destination se règle sur la fiche, une fois le client choisi — il reste ensuite mémorisé pour toutes ses commandes.</div>
       <div class="field"><label>Référence envoi</label><input id="f-ref" /></div>
       <div class="field"><label>Lien dossier Moovapps</label><input id="f-lien" placeholder="https://…" /></div>
       <button class="modal-submit" data-action="submit-new">Ajouter l'envoi</button>
@@ -645,19 +1035,20 @@ function submitNew() {
   const client = resolveFieldValue("f-client", "f-client-new", "clients");
   if (!client) return;
   const transitaire = resolveFieldValue("f-transitaire", "f-transitaire-new", "transitaires");
-  const port = resolveFieldValue("f-port", "f-port-new", "ports");
   const s = {
     id: uid(),
     client,
     transitaire,
-    port,
     ref: document.getElementById("f-ref").value.trim(),
     lien: normalizeLink(document.getElementById("f-lien").value),
     date: "",
     clientStepValue: "",
     transitStepValue: "",
-    documents: {},
     comment: "",
+    datePositionnement: "",
+    dateCloture: "",
+    dateETD: "",
+    dateETA: "",
     createdAt: Date.now(),
   };
   state.shipments = [s, ...state.shipments];
@@ -665,6 +1056,118 @@ function submitNew() {
   saveLists();
   closeModal();
   render();
+}
+
+// ---------- Carte des expéditions en cours ----------
+function openMap() {
+  // Expéditions en cours = pas encore LIVRÉ, avec un client (donc potentiellement un port)
+  const active = state.shipments.filter((s) => overallStatus(s) !== "LIVRÉ" && s.client);
+
+  const byPort = {}; // "Nom du port" -> [shipments]
+  const unlocated = new Set(); // ports sans coordonnées connues
+
+  active.forEach((s) => {
+    const port = state.clientPorts[s.client];
+    if (!port) return;
+    const coords = lookupPortCoords(port);
+    if (coords) {
+      if (!byPort[port]) byPort[port] = { coords, shipments: [] };
+      byPort[port].shipments.push(s);
+    } else {
+      unlocated.add(port);
+    }
+  });
+
+  const pins = Object.entries(byPort)
+    .map(([port, data]) => {
+      const { x, y } = latLngToXY(data.coords.lat, data.coords.lng);
+      return `<g class="map-pin" data-action="open-port-popover" data-port="${escapeHtml(port)}" transform="translate(${x},${y})">
+        <circle r="7" class="map-pin-dot"></circle>
+        <text class="map-pin-count" text-anchor="middle" dy="3.5">${data.shipments.length}</text>
+      </g>`;
+    })
+    .join("");
+
+  const unlocatedHtml = [...unlocated]
+    .map(
+      (port) => `
+    <div class="unlocated-row">
+      <span class="unlocated-name">${escapeHtml(port)}</span>
+      <input type="number" step="0.01" placeholder="latitude" id="lat-${escapeHtml(port)}" />
+      <input type="number" step="0.01" placeholder="longitude" id="lng-${escapeHtml(port)}" />
+      <button class="icon-btn" data-action="locate-port" data-port="${escapeHtml(port)}">Localiser</button>
+    </div>`
+    )
+    .join("");
+
+  document.getElementById("modal-root").innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal wide" style="max-width:760px;">
+      <div class="modal-head"><h2>Carte des expéditions en cours</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
+      ${
+        pins === ""
+          ? `<div class="modal-note">Aucune expédition en cours n'a de port de destination localisable pour l'instant.</div>`
+          : `<svg viewBox="0 0 1000 500" class="map-svg">
+              <rect x="0" y="0" width="1000" height="500" class="map-sea"></rect>
+              ${[100, 200, 300, 400, 500, 600, 700, 800, 900].map((x) => `<line x1="${x}" y1="0" x2="${x}" y2="500" class="map-grid"/>`).join("")}
+              ${[50, 100, 150, 200, 300, 350, 400, 450].map((y) => `<line x1="0" y1="${y}" x2="1000" y2="${y}" class="map-grid"/>`).join("")}
+              <line x1="0" y1="250" x2="1000" y2="250" class="map-equator"/>
+              <path class="map-continent" d="M60,140 Q40,100 100,70 Q180,50 240,90 Q290,120 270,180 Q250,240 190,260 Q120,270 80,220 Q50,180 60,140 Z"/>
+              <path class="map-continent" d="M220,260 Q260,240 300,270 Q330,320 320,380 Q300,440 250,450 Q210,440 200,380 Q195,310 220,260 Z"/>
+              <path class="map-continent" d="M470,60 Q540,40 580,70 Q600,100 570,120 Q530,130 490,110 Q460,90 470,60 Z"/>
+              <path class="map-continent" d="M480,120 Q560,110 590,160 Q610,240 580,320 Q550,390 500,400 Q460,380 460,300 Q455,200 480,120 Z"/>
+              <path class="map-continent" d="M600,60 Q750,40 880,90 Q930,130 900,190 Q850,230 750,220 Q650,210 610,150 Q590,100 600,60 Z"/>
+              <path class="map-continent" d="M790,330 Q860,320 900,350 Q910,390 870,410 Q820,420 790,390 Q775,360 790,330 Z"/>
+              ${pins}
+            </svg>
+            <div class="map-legend">${icon("mapPin", 12)} Le chiffre indique le nombre d'expéditions en cours pour ce port. Clique dessus pour les lister.</div>`
+      }
+      ${
+        unlocated.size > 0
+          ? `<div class="modal-note" style="margin-top:14px;">Ports non localisés — renseigne leurs coordonnées une fois pour qu'ils apparaissent sur la carte :</div>
+             <div class="unlocated-list">${unlocatedHtml}</div>`
+          : ""
+      }
+      <div id="port-popover-root"></div>
+    </div>
+  </div>`;
+}
+
+function openPortPopover(port) {
+  const active = state.shipments.filter((s) => overallStatus(s) !== "LIVRÉ" && s.client && state.clientPorts[s.client] === port);
+  const root = document.getElementById("port-popover-root");
+  if (!root) return;
+  root.innerHTML = `
+    <div class="port-popover">
+      <div class="port-popover-head">
+        <span>${escapeHtml(port)}</span>
+        <button class="close-btn" data-action="close-port-popover">${icon("x", 15)}</button>
+      </div>
+      ${active
+        .map((s) => {
+          const cat = dossierCategory(s);
+          return `<button class="port-popover-row" data-action="scroll-to-shipment-close-map" data-id="${s.id}">
+            <span class="milestone-badge milestone-${cat.key}" style="margin:0;">${cat.label}</span>
+            <span class="port-popover-ref">${escapeHtml(s.ref || s.id.toUpperCase())}</span>
+            <span class="port-popover-client">${escapeHtml(s.client)}</span>
+          </button>`;
+        })
+        .join("")}
+    </div>`;
+}
+
+function locatePort(port) {
+  const latInput = document.getElementById(`lat-${port}`);
+  const lngInput = document.getElementById(`lng-${port}`);
+  const lat = parseFloat(latInput.value);
+  const lng = parseFloat(lngInput.value);
+  if (Number.isNaN(lat) || Number.isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    alert("Latitude (entre -90 et 90) et longitude (entre -180 et 180) invalides.");
+    return;
+  }
+  state.portCoordinates[port] = { lat, lng };
+  savePortCoordinates();
+  openMap(); // ré-affiche la carte à jour avec le nouveau point
 }
 
 // ---------- Réglages : étapes éditables ----------
@@ -685,7 +1188,7 @@ function renderSettingsModal() {
   <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide">
       <div class="modal-head"><h2>Réglages</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
-      <div class="modal-note">Étapes : l'ordre détermine la progression du bateau. Documents, Clients, Transitaires, Ports : listes proposées sur les fiches et dans le formulaire "Nouvel envoi".</div>
+      <div class="modal-note">Étapes : l'ordre détermine la progression du bateau. Clients, Transitaires, Ports : listes proposées dans "Nouvel envoi". Documents : assignés Soka/Transitaire sur chaque fiche — l'assignation est mémorisée par client et s'applique à toutes ses commandes.</div>
       <div class="settings-columns">
         <div class="settings-col">
           <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
@@ -790,7 +1293,37 @@ function handleDelegatedClick(e) {
     case "filter-client": filterByClient(el.dataset.client); break;
     case "set-step": setStep(el.dataset.id, el.dataset.type, el.dataset.value); break;
     case "delete-shipment": deleteShipment(el.dataset.id); break;
-    case "set-doc-owner": setDocumentOwner(el.dataset.id, el.dataset.doc, el.dataset.owner); break;
+    case "set-doc-owner": setDocumentOwner(el.dataset.client, el.dataset.doc, el.dataset.owner); break;
+    case "scroll-to-shipment": {
+      const target = document.getElementById("shipment-" + el.dataset.id);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.classList.add("card-highlight");
+        setTimeout(() => target.classList.remove("card-highlight"), 1500);
+      }
+      break;
+    }
+    case "open-map": openMap(); break;
+    case "open-port-popover": openPortPopover(el.dataset.port); break;
+    case "close-port-popover": {
+      const root = document.getElementById("port-popover-root");
+      if (root) root.innerHTML = "";
+      break;
+    }
+    case "locate-port": locatePort(el.dataset.port); break;
+    case "submit-access-code": submitAccessCode(); break;
+    case "scroll-to-shipment-close-map": {
+      closeModal();
+      setTimeout(() => {
+        const target = document.getElementById("shipment-" + el.dataset.id);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          target.classList.add("card-highlight");
+          setTimeout(() => target.classList.remove("card-highlight"), 1500);
+        }
+      }, 50);
+      break;
+    }
     case "open-new": openNew(); break;
     case "submit-new": submitNew(); break;
     case "open-settings": openSettings(); break;
@@ -815,9 +1348,14 @@ function handleDelegatedInput(e) {
 
 function handleDelegatedChange(e) {
   const el = e.target;
-  if (el.dataset && el.dataset.action === "toggle-new-field") {
+  if (!el.dataset) return;
+  if (el.dataset.action === "toggle-new-field") {
     const target = document.getElementById(el.dataset.target);
     if (target) target.style.display = el.value === "__new__" ? "block" : "none";
+  } else if (el.dataset.action === "set-client-port") {
+    setClientPort(el.dataset.client, el.value);
+  } else if (el.dataset.action === "update-date") {
+    updateDate(el.dataset.id, el.dataset.field, el.value);
   }
 }
 
@@ -826,9 +1364,12 @@ document.addEventListener("input", handleDelegatedInput);
 document.addEventListener("change", handleDelegatedChange);
 
 // ---------- Initialisation ----------
-loadFromLocalCache();
-render();
-subscribeToCloud();
+const cachedCode = localStorage.getItem(ACCESS_CODE_KEY);
+if (cachedCode) {
+  initWithCode(cachedCode);
+} else {
+  showAccessGate();
+}
 
 </script>
 </body>
