@@ -288,6 +288,8 @@ main { padding: 24px; }
     <span id="sync-status" class="sync-badge sync-connecting">● Connexion…</span>
   </div>
   <div class="header-actions">
+    <button class="btn btn-ghost" data-action="export-csv"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button>
+    <button class="btn btn-ghost" data-action="open-import"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Importer</button>
     <button class="btn btn-ghost" data-action="open-map"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> Carte</button>
     <button class="btn btn-ghost" data-action="open-settings"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Réglages</button>
     <button class="btn btn-primary" data-action="open-new"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Nouvel envoi</button>
@@ -1058,6 +1060,175 @@ function submitNew() {
   render();
 }
 
+// ---------- Import d'une liste de commandes (fichier ou copier-coller) ----------
+const IMPORT_HEADERS = ["référence", "client", "transitaire", "étape client", "étape transitaire", "date positionnement", "date clôture", "etd", "eta"];
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function splitDelimitedLine(line, delim) {
+  const cells = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === delim) { cells.push(cur); cur = ""; }
+      else cur += ch;
+    }
+  }
+  cells.push(cur);
+  return cells;
+}
+
+function parseDelimitedText(text) {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return [];
+  const delim = lines[0].split("\t").length > lines[0].split(",").length ? "\t" : ",";
+  return lines.map((l) => splitDelimitedLine(l, delim));
+}
+
+function mergeImportedRows(rows) {
+  const norm = (s) => (s || "").trim().toLowerCase();
+  let headerMap = null;
+  let startIdx = 0;
+  if (rows.length && norm(rows[0][0]) === "référence") {
+    headerMap = rows[0].map(norm);
+    startIdx = 1;
+  }
+  const getCell = (row, name, fallbackIdx) => {
+    if (headerMap) { const idx = headerMap.indexOf(name); return idx >= 0 ? (row[idx] || "") : ""; }
+    return row[fallbackIdx] || "";
+  };
+
+  const warnings = [];
+  let added = 0, updated = 0;
+
+  for (let i = startIdx; i < rows.length; i++) {
+    const row = rows[i];
+    const ref = getCell(row, "référence", 0).trim();
+    const client = getCell(row, "client", 1).trim();
+    if (!ref && !client) continue;
+
+    const transitaire = getCell(row, "transitaire", 2).trim();
+    const clientStepText = getCell(row, "étape client", 3).trim();
+    const transitStepText = getCell(row, "étape transitaire", 4).trim();
+    const dPosRaw = getCell(row, "date positionnement", 5).trim();
+    const dCloRaw = getCell(row, "date clôture", 6).trim();
+    const dEtdRaw = getCell(row, "etd", 7).trim();
+    const dEtaRaw = getCell(row, "eta", 8).trim();
+
+    let clientStepValue = "";
+    if (clientStepText) {
+      if (state.steps.client.includes(clientStepText)) clientStepValue = clientStepText;
+      else warnings.push(`Ligne ${i + 1} : étape client « ${clientStepText} » inconnue, ignorée.`);
+    }
+    let transitStepValue = "";
+    if (transitStepText) {
+      if (state.steps.transit.includes(transitStepText)) transitStepValue = transitStepText;
+      else warnings.push(`Ligne ${i + 1} : étape transitaire « ${transitStepText} » inconnue, ignorée.`);
+    }
+
+    const checkDate = (raw, label) => {
+      if (!raw) return "";
+      if (!ISO_DATE_RE.test(raw)) { warnings.push(`Ligne ${i + 1} : date ${label} « ${raw} » ignorée (format attendu AAAA-MM-JJ).`); return ""; }
+      return raw;
+    };
+    const datePositionnement = checkDate(dPosRaw, "positionnement");
+    const dateCloture = checkDate(dCloRaw, "clôture");
+    const dateETD = checkDate(dEtdRaw, "ETD");
+    const dateETA = checkDate(dEtaRaw, "ETA");
+
+    const existing = ref ? state.shipments.find((s) => norm(s.ref) === norm(ref)) : null;
+    if (existing) {
+      Object.assign(existing, { client, transitaire, clientStepValue, transitStepValue, datePositionnement, dateCloture, dateETD, dateETA });
+      updated++;
+    } else {
+      state.shipments.push({
+        id: uid(), ref, client, transitaire, clientStepValue, transitStepValue,
+        datePositionnement, dateCloture, dateETD, dateETA, comment: "", createdAt: Date.now(),
+      });
+      added++;
+    }
+  }
+  return { added, updated, warnings };
+}
+
+function csvEscape(value) {
+  const v = value == null ? "" : String(value);
+  if (/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function exportCsv() {
+  const rows = [
+    ["Référence", "Client", "Transitaire", "Étape client", "Étape transitaire", "Date positionnement", "Date clôture", "ETD", "ETA"],
+  ];
+  state.shipments.forEach((s) => {
+    rows.push([
+      s.ref || "", s.client || "", s.transitaire || "",
+      s.clientStepValue || "", s.transitStepValue || "",
+      s.datePositionnement || "", s.dateCloture || "", s.dateETD || "", s.dateETA || "",
+    ]);
+  });
+  const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `commandes-soka-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function openImport() {
+  document.getElementById("modal-root").innerHTML = `
+  <div class="modal-overlay" data-action="overlay-close">
+    <div class="modal wide">
+      <div class="modal-head"><h2>Importer des commandes</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
+      <div class="modal-note">
+        Choisis un fichier .csv, ou colle des lignes copiées depuis Excel.<br>
+        Colonnes attendues (dans cet ordre, avec ou sans ligne d'en-tête) : <em>${IMPORT_HEADERS.join(", ")}</em>.<br>
+        Dates au format AAAA-MM-JJ. Le port et les documents se règlent ensuite par client, directement sur les fiches.
+      </div>
+      <div class="field">
+        <label>Fichier CSV</label>
+        <input type="file" id="import-file-input" accept=".csv,.txt" onchange="handleImportFile(event)" />
+      </div>
+      <div class="field"><label>...ou coller ici</label><textarea id="import-text" placeholder="Colle ici les lignes copiées depuis Excel…"></textarea></div>
+      <div id="import-feedback"></div>
+      <button class="modal-submit" style="background:var(--blue); color:var(--paper);" data-action="submit-import">Importer</button>
+    </div>
+  </div>`;
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => { document.getElementById("import-text").value = e.target.result; };
+  reader.readAsText(file, "UTF-8");
+}
+
+function submitImport() {
+  const text = document.getElementById("import-text").value;
+  const rows = parseDelimitedText(text);
+  const { added, updated, warnings } = mergeImportedRows(rows);
+  const feedback = document.getElementById("import-feedback");
+  let html = "";
+  if (warnings.length) html += `<div class="warning-box">${warnings.map((w) => `${icon("alertCircle", 13, "margin-right:4px;")}${escapeHtml(w)}`).join("<br>")}</div>`;
+  html += `<div class="import-result">${added} commande(s) ajoutée(s), ${updated} mise(s) à jour.</div>`;
+  feedback.innerHTML = html;
+  if (added || updated) { saveShipments(); render(); }
+}
+
 // ---------- Carte des expéditions en cours ----------
 function openMap() {
   // Expéditions en cours = pas encore LIVRÉ, avec un client (donc potentiellement un port)
@@ -1312,6 +1483,9 @@ function handleDelegatedClick(e) {
     }
     case "locate-port": locatePort(el.dataset.port); break;
     case "submit-access-code": submitAccessCode(); break;
+    case "open-import": openImport(); break;
+    case "export-csv": exportCsv(); break;
+    case "submit-import": submitImport(); break;
     case "scroll-to-shipment-close-map": {
       closeModal();
       setTimeout(() => {
