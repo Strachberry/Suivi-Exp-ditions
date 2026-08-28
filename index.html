@@ -92,10 +92,6 @@ main { padding: 24px; }
   margin-bottom: 4px; display: block;
 }
 .meta { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-bottom: 14px; flex-wrap: wrap; }
-.port-select {
-  font-size: 12px; padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); background: #fff;
-  font-family: 'IBM Plex Sans', Arial, sans-serif; color: var(--ink); cursor: pointer;
-}
 
 .boat-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .status-label { font-family: 'Oswald', Arial, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; }
@@ -148,15 +144,23 @@ main { padding: 24px; }
 .settings-columns { display: flex; gap: 20px; flex-wrap: wrap; }
 .settings-col { flex: 1; min-width: 220px; }
 .settings-col h3 { font-family: 'Oswald', Arial, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 0 0 8px; }
-.step-edit-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.step-edit-row input { flex: 1; padding: 6px 8px; border-radius: 3px; border: 1px solid var(--line); font-size: 12.5px; }
+.step-edit-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.step-edit-row input { flex: 1; min-width: 100px; padding: 6px 8px; border-radius: 3px; border: 1px solid var(--line); font-size: 12.5px; }
+.step-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); min-width: 16px; text-align: right;
+}
 .icon-btn { background: none; border: 1px solid var(--line); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 4px 6px; color: var(--muted); }
 .add-step-btn { margin-top: 4px; background: none; border: 1px dashed var(--line); border-radius: 3px; padding: 6px 10px; font-size: 12px; color: var(--muted); cursor: pointer; width: 100%; }
 
 .doc-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
-.doc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.doc-name { font-size: 12.5px; color: var(--ink); flex: 1; }
-.doc-buttons { display: flex; gap: 4px; flex-shrink: 0; }
+.check-chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.check-chip {
+  display: flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 10px; border-radius: 14px;
+  border: 1px solid var(--line); background: #fff; color: var(--muted); cursor: pointer;
+  font-family: 'IBM Plex Sans', Arial, sans-serif; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.check-chip .check-box { display: inline-flex; width: 13px; height: 13px; align-items: center; justify-content: center; }
+.check-chip.checked { background: var(--blue); border-color: var(--blue); color: var(--paper); }
 .doc-btn {
   font-size: 10.5px; padding: 3px 9px; border-radius: 3px; border: 1px solid var(--line); background: transparent;
   color: var(--muted); cursor: pointer; font-family: 'Oswald', Arial, sans-serif; letter-spacing: 0.03em;
@@ -321,8 +325,18 @@ main { padding: 24px; }
 // utilisateur inséré dedans, qui cassaient dès qu'un nom contenait
 // une apostrophe ou un guillemet).
 
-const DEFAULT_CLIENT_STEPS = ["Commande reçue", "Documents transmis", "Expédié", "Dédouané", "Livré"];
-const DEFAULT_TRANSIT_STEPS = ["Pris en charge", "En transport", "En dédouanement", "Livraison finale", "Confirmé"];
+const DEFAULT_STEPS = [
+  { label: "Commande reçue", type: "client" },
+  { label: "Documents transmis", type: "client" },
+  { label: "Pris en charge", type: "transitaire" },
+  { label: "Expédié", type: "client" },
+  { label: "En transport", type: "transitaire" },
+  { label: "En dédouanement", type: "transitaire" },
+  { label: "Dédouané", type: "client" },
+  { label: "Livraison finale", type: "transitaire" },
+  { label: "Confirmé", type: "transitaire" },
+  { label: "Livré", type: "client" },
+];
 
 const SHIPMENTS_KEY = "soka-shipments-v1";
 const STEPS_KEY = "soka-steps-v1";
@@ -335,11 +349,11 @@ const PORT_COORDS_KEY = "soka-port-coords-v1";
 
 let state = {
   shipments: [],
-  steps: { client: [...DEFAULT_CLIENT_STEPS], transit: [...DEFAULT_TRANSIT_STEPS] },
+  steps: [...DEFAULT_STEPS], // [{ label, type: "client" | "transitaire" }, ...] -- suivi unique, numéroté et coloré
   documents: [...DEFAULT_DOCUMENTS],
   lists: { clients: [], transitaires: [], ports: [] },
-  clientDocuments: {}, // { "Nom client": { "Nom document": "Soka" | "Transitaire" } }
-  clientPorts: {}, // { "Nom client": "Nom du port" }
+  clientDocuments: {}, // { "Nom client": ["Nom document", ...] } -- coche simple, liée au client
+  clientPorts: {}, // { "Nom client": ["Nom du port", ...] } -- liste propre à chaque client
   portCoordinates: {}, // overrides/ajouts manuels { "Nom du port": { lat, lng } }
   filter: "TOUS",
   clientFilter: null,
@@ -458,8 +472,7 @@ function loadFromLocalCache() {
     const rawSteps = localStorage.getItem(STEPS_KEY);
     if (rawSteps) {
       const parsed = JSON.parse(rawSteps);
-      if (Array.isArray(parsed.client) && parsed.client.length) state.steps.client = parsed.client;
-      if (Array.isArray(parsed.transit) && parsed.transit.length) state.steps.transit = parsed.transit;
+      if (Array.isArray(parsed) && parsed.length) state.steps = parsed;
     }
   } catch (e) { /* garde les valeurs par défaut */ }
 
@@ -555,10 +568,7 @@ function subscribeToCloud() {
       if (snap.exists) {
         const data = snap.data();
         if (Array.isArray(data.shipments)) state.shipments = data.shipments;
-        if (data.steps) {
-          if (Array.isArray(data.steps.client) && data.steps.client.length) state.steps.client = data.steps.client;
-          if (Array.isArray(data.steps.transit) && data.steps.transit.length) state.steps.transit = data.steps.transit;
-        }
+        if (Array.isArray(data.steps) && data.steps.length) state.steps = data.steps;
         if (Array.isArray(data.documents)) state.documents = data.documents;
         if (data.lists) {
           if (Array.isArray(data.lists.clients)) state.lists.clients = data.lists.clients;
@@ -636,13 +646,14 @@ function normalizeLink(url) {
 }
 
 // ---------- Logique métier ----------
+function stepIndex(s) {
+  return state.steps.findIndex((st) => st.label === s.currentStepValue);
+}
+
 function overallStatus(s) {
-  const c = state.steps.client.indexOf(s.clientStepValue || "");
-  const t = state.steps.transit.indexOf(s.transitStepValue || "");
-  const cDone = c === state.steps.client.length - 1;
-  const tDone = t === state.steps.transit.length - 1;
-  if (cDone && tDone) return "LIVRÉ";
-  if (c === -1 && t === -1) return "NOUVEAU";
+  const idx = stepIndex(s);
+  if (idx === -1) return "NOUVEAU";
+  if (idx === state.steps.length - 1) return "LIVRÉ";
   return "EN TRANSIT";
 }
 
@@ -653,18 +664,20 @@ function stampColor(status) {
 }
 
 function progressFraction(s) {
-  const c = state.steps.client.indexOf(s.clientStepValue || "");
-  const t = state.steps.transit.indexOf(s.transitStepValue || "");
-  const total = state.steps.client.length + state.steps.transit.length;
-  const done = (c + 1) + (t + 1);
-  return total === 0 ? 0 : done / total;
+  const total = state.steps.length;
+  if (total === 0) return 0;
+  const idx = stepIndex(s);
+  return (idx + 1) / total;
 }
 
 function currentPhaseText(s) {
-  const parts = [];
-  if (s.clientStepValue) parts.push(s.clientStepValue);
-  if (s.transitStepValue) parts.push(s.transitStepValue);
-  return parts.length ? parts.join(" · ") : "En attente de départ";
+  const idx = stepIndex(s);
+  if (idx === -1) return "En attente de départ";
+  return `${idx + 1}. ${state.steps[idx].label}`;
+}
+
+function stepTypeColor(type) {
+  return type === "transitaire" ? "#8A6A3B" : "#2C5F8A";
 }
 
 // ---------- Carte : base de ports connus (positions approximatives) ----------
@@ -779,18 +792,19 @@ function dateFieldsHtml(s) {
 }
 
 // ---------- Rendu ----------
-function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
-  const currentIndex = steps.indexOf(currentValue || "");
+function stepsRowHtml(shipmentId, currentValue) {
+  const currentIndex = state.steps.findIndex((st) => st.label === (currentValue || ""));
   let html = '<div class="steps-row">';
-  steps.forEach((step, i) => {
+  state.steps.forEach((step, i) => {
     const reached = i <= currentIndex;
     const isCurrent = i === currentIndex;
+    const color = stepTypeColor(step.type);
     const targetIndex = isCurrent ? i - 1 : i;
-    const targetValue = targetIndex >= 0 ? steps[targetIndex] : "";
-    html += `<button class="step-dot ${isCurrent ? "current" : ""}" title="${escapeHtml(step)}"
+    const targetValue = targetIndex >= 0 ? state.steps[targetIndex].label : "";
+    html += `<button class="step-dot ${isCurrent ? "current" : ""}" title="${i + 1}. ${escapeHtml(step.label)} (${step.type === "transitaire" ? "Transitaire" : "Client"})"
       style="border-color:${reached ? color : "var(--line)"}; background:${reached ? color : "var(--paper)"};"
-      data-action="set-step" data-id="${shipmentId}" data-type="${type}" data-value="${escapeHtml(targetValue)}"></button>`;
-    if (i < steps.length - 1) {
+      data-action="set-step" data-id="${shipmentId}" data-value="${escapeHtml(targetValue)}"></button>`;
+    if (i < state.steps.length - 1) {
       html += `<div class="step-connector" style="background:${i < currentIndex ? color : "var(--line)"};"></div>`;
     }
   });
@@ -798,35 +812,40 @@ function stepsRowHtml(shipmentId, steps, currentValue, type, color) {
   return html;
 }
 
-function portSelectorHtml(clientName) {
-  const current = state.clientPorts[clientName] || "";
-  const options = state.lists.ports
-    .map((p) => `<option value="${escapeHtml(p)}" ${p === current ? "selected" : ""}>${escapeHtml(p)}</option>`)
-    .join("");
-  return `<select class="port-select" data-action="set-client-port" data-client="${escapeHtml(clientName)}">
-    <option value="">— Port —</option>
-    ${options}
-  </select>`;
+function portChipHtml(clientName, port) {
+  const active = (state.clientPorts[clientName] || []).includes(port);
+  return `<button class="check-chip ${active ? "checked" : ""}" data-action="toggle-client-port" data-client="${escapeHtml(clientName)}" data-port="${escapeHtml(port)}">
+    <span class="check-box">${active ? icon("checkCircle", 13) : ""}</span>
+    ${escapeHtml(port)}
+  </button>`;
 }
 
-function setClientPort(clientName, port) {
-  if (!clientName) return;
-  if (port) state.clientPorts[clientName] = port;
-  else delete state.clientPorts[clientName];
+function toggleClientPort(clientName, port) {
+  if (!clientName || !port) return;
+  const current = state.clientPorts[clientName] || [];
+  state.clientPorts[clientName] = current.includes(port)
+    ? current.filter((p) => p !== port)
+    : [...current, port];
   saveClientPorts();
   render();
 }
 
-function docRowHtml(clientName, doc) {
-  const bucket = state.clientDocuments[clientName] || {};
-  const owner = bucket[doc] || null;
-  return `<div class="doc-row">
-    <span class="doc-name">${escapeHtml(doc)}</span>
-    <span class="doc-buttons">
-      <button class="doc-btn ${owner === "Soka" ? "active-soka" : ""}" data-action="set-doc-owner" data-client="${escapeHtml(clientName)}" data-doc="${escapeHtml(doc)}" data-owner="Soka">Soka</button>
-      <button class="doc-btn ${owner === "Transitaire" ? "active-transit" : ""}" data-action="set-doc-owner" data-client="${escapeHtml(clientName)}" data-doc="${escapeHtml(doc)}" data-owner="Transitaire">Transitaire</button>
-    </span>
-  </div>`;
+function docChipHtml(clientName, doc) {
+  const active = (state.clientDocuments[clientName] || []).includes(doc);
+  return `<button class="check-chip ${active ? "checked" : ""}" data-action="toggle-client-doc" data-client="${escapeHtml(clientName)}" data-doc="${escapeHtml(doc)}">
+    <span class="check-box">${active ? icon("checkCircle", 13) : ""}</span>
+    ${escapeHtml(doc)}
+  </button>`;
+}
+
+function toggleClientDocument(clientName, doc) {
+  if (!clientName || !doc) return;
+  const current = state.clientDocuments[clientName] || [];
+  state.clientDocuments[clientName] = current.includes(doc)
+    ? current.filter((d) => d !== doc)
+    : [...current, doc];
+  saveClientDocuments();
+  render();
 }
 
 function cardHtml(s) {
@@ -835,13 +854,14 @@ function cardHtml(s) {
   const frac = progressFraction(s);
   const left = 8 + frac * 84;
   const cat = dossierCategory(s);
+  const clientPortsActive = s.client ? (state.clientPorts[s.client] || []) : [];
 
   return `
   <div class="card" id="shipment-${s.id}">
     <div class="milestone-badge milestone-${cat.key}">${cat.label}</div>
     <div class="ref">${escapeHtml(s.ref || s.id.toUpperCase())}</div>
     <button class="client-link" data-action="filter-client" data-client="${escapeHtml(s.client || "")}">${escapeHtml(s.client || "Client sans nom")}</button>
-    <div class="meta">${icon("mapPin", 12)} ${s.client ? portSelectorHtml(s.client) : `<span>Port non précisé</span>`} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
+    <div class="meta">${icon("mapPin", 12)} ${clientPortsActive.length ? escapeHtml(clientPortsActive.join(", ")) : "Port non précisé"} · ${escapeHtml(s.transitaire || "Transitaire non précisé")}</div>
 
     <div class="boat-head">
       <div class="status-label" style="color:${sc.text}">${status}</div>
@@ -855,14 +875,9 @@ function cardHtml(s) {
     </div>
 
     <div class="stepper">
-      <div class="stepper-label">${icon("package", 13)} Côté client</div>
-      ${stepsRowHtml(s.id, state.steps.client, s.clientStepValue, "client", "#2C5F8A")}
-      <div class="stepper-current">${s.clientStepValue ? escapeHtml(s.clientStepValue) : "Pas encore commencé"}</div>
-    </div>
-    <div class="stepper">
-      <div class="stepper-label">${icon("truck", 13)} Côté transitaire</div>
-      ${stepsRowHtml(s.id, state.steps.transit, s.transitStepValue, "transit", "#8A6A3B")}
-      <div class="stepper-current">${s.transitStepValue ? escapeHtml(s.transitStepValue) : "Pas encore commencé"}</div>
+      <div class="stepper-label">${icon("package", 13)} Suivi</div>
+      ${stepsRowHtml(s.id, s.currentStepValue)}
+      <div class="stepper-current">${currentPhaseText(s)}</div>
     </div>
 
     <div class="dates-section">
@@ -876,7 +891,16 @@ function cardHtml(s) {
         ? `<div style="font-size:11.5px;color:var(--taupe);">Aucun document configuré (bouton Réglages)</div>`
         : !s.client
         ? `<div style="font-size:11.5px;color:var(--taupe);">Renseigne un client pour gérer ses documents</div>`
-        : state.documents.map((doc) => docRowHtml(s.client, doc)).join("")}
+        : `<div class="check-chip-list">${state.documents.map((doc) => docChipHtml(s.client, doc)).join("")}</div>`}
+    </div>
+
+    <div class="doc-section">
+      <div class="stepper-label">${icon("mapPin", 13)} Ports du client</div>
+      ${state.lists.ports.length === 0
+        ? `<div style="font-size:11.5px;color:var(--taupe);">Aucun port configuré (bouton Réglages)</div>`
+        : !s.client
+        ? `<div style="font-size:11.5px;color:var(--taupe);">Renseigne un client pour gérer ses ports</div>`
+        : `<div class="check-chip-list">${state.lists.ports.map((port) => portChipHtml(s.client, port)).join("")}</div>`}
     </div>
 
     <div class="comment-section">
@@ -945,11 +969,10 @@ function setFilter(f) { state.filter = f; render(); }
 function filterByClient(c) { if (c) { state.clientFilter = c; render(); } }
 function clearClientFilter() { state.clientFilter = null; render(); }
 
-function setStep(id, type, value) {
+function setStep(id, value) {
   const s = state.shipments.find((x) => x.id === id);
   if (!s) return;
-  if (type === "client") s.clientStepValue = value;
-  else s.transitStepValue = value;
+  s.currentStepValue = value;
   saveShipments();
   render();
 }
@@ -957,16 +980,6 @@ function setStep(id, type, value) {
 function deleteShipment(id) {
   state.shipments = state.shipments.filter((s) => s.id !== id);
   saveShipments();
-  render();
-}
-
-function setDocumentOwner(clientName, doc, owner) {
-  if (!clientName) return;
-  if (!state.clientDocuments[clientName]) state.clientDocuments[clientName] = {};
-  const bucket = state.clientDocuments[clientName];
-  if (bucket[doc] === owner) delete bucket[doc];
-  else bucket[doc] = owner;
-  saveClientDocuments();
   render();
 }
 
@@ -1044,8 +1057,7 @@ function submitNew() {
     ref: document.getElementById("f-ref").value.trim(),
     lien: normalizeLink(document.getElementById("f-lien").value),
     date: "",
-    clientStepValue: "",
-    transitStepValue: "",
+    currentStepValue: "",
     comment: "",
     datePositionnement: "",
     dateCloture: "",
@@ -1061,7 +1073,7 @@ function submitNew() {
 }
 
 // ---------- Import d'une liste de commandes (fichier ou copier-coller) ----------
-const IMPORT_HEADERS = ["référence", "client", "transitaire", "étape client", "étape transitaire", "date positionnement", "date clôture", "etd", "eta"];
+const IMPORT_HEADERS = ["référence", "client", "transitaire", "étape", "date positionnement", "date clôture", "etd", "eta"];
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function splitDelimitedLine(line, delim) {
@@ -1145,7 +1157,8 @@ function mergeSokaSourceRows(rows) {
     if (client && port) {
       if (!state.lists.clients.includes(client)) { state.lists.clients.push(client); listsChanged = true; }
       if (!state.lists.ports.includes(port)) { state.lists.ports.push(port); listsChanged = true; }
-      if (state.clientPorts[client] !== port) { state.clientPorts[client] = port; portsChanged = true; }
+      if (!state.clientPorts[client]) state.clientPorts[client] = [];
+      if (!state.clientPorts[client].includes(port)) { state.clientPorts[client].push(port); portsChanged = true; }
     }
 
     const existing = ref ? state.shipments.find((s) => norm(s.ref) === norm(ref)) : null;
@@ -1155,7 +1168,7 @@ function mergeSokaSourceRows(rows) {
       updated++;
     } else {
       state.shipments.push({
-        id: uid(), ref, client, transitaire: "", clientStepValue: "", transitStepValue: "",
+        id: uid(), ref, client, transitaire: "", currentStepValue: "",
         datePositionnement, dateCloture: "", dateETD: "", dateETA: "",
         comment: "", createdAt: Date.now(),
       });
@@ -1191,28 +1204,26 @@ function mergeImportedRows(rows) {
     if (!ref && !client) continue;
 
     const transitaire = getCell(row, "transitaire", 2).trim();
-    const clientStepText = getCell(row, "étape client", 3).trim();
-    const transitStepText = getCell(row, "étape transitaire", 4).trim();
-    const dPosRaw = getCell(row, "date positionnement", 5).trim();
-    const dCloRaw = getCell(row, "date clôture", 6).trim();
-    const dEtdRaw = getCell(row, "etd", 7).trim();
-    const dEtaRaw = getCell(row, "eta", 8).trim();
+    const stepText = getCell(row, "étape", 3).trim();
+    const dPosRaw = getCell(row, "date positionnement", 4).trim();
+    const dCloRaw = getCell(row, "date clôture", 5).trim();
+    const dEtdRaw = getCell(row, "etd", 6).trim();
+    const dEtaRaw = getCell(row, "eta", 7).trim();
 
-    let clientStepValue = "";
-    if (clientStepText) {
-      if (state.steps.client.includes(clientStepText)) clientStepValue = clientStepText;
-      else warnings.push(`Ligne ${i + 1} : étape client « ${clientStepText} » inconnue, ignorée.`);
-    }
-    let transitStepValue = "";
-    if (transitStepText) {
-      if (state.steps.transit.includes(transitStepText)) transitStepValue = transitStepText;
-      else warnings.push(`Ligne ${i + 1} : étape transitaire « ${transitStepText} » inconnue, ignorée.`);
+    let currentStepValue = "";
+    if (stepText) {
+      if (state.steps.some((st) => st.label === stepText)) currentStepValue = stepText;
+      else warnings.push(`Ligne ${i + 1} : étape « ${stepText} » inconnue, ignorée.`);
     }
 
     const checkDate = (raw, label) => {
       if (!raw) return "";
-      if (!ISO_DATE_RE.test(raw)) { warnings.push(`Ligne ${i + 1} : date ${label} « ${raw} » ignorée (format attendu AAAA-MM-JJ).`); return ""; }
-      return raw;
+      const trimmed = raw.trim();
+      if (ISO_DATE_RE.test(trimmed)) return trimmed;
+      const converted = convertFrDateToISO(trimmed);
+      if (converted) return converted;
+      warnings.push(`Ligne ${i + 1} : date ${label} « ${raw} » ignorée (format attendu AAAA-MM-JJ ou JJ/MM/AAAA).`);
+      return "";
     };
     const datePositionnement = checkDate(dPosRaw, "positionnement");
     const dateCloture = checkDate(dCloRaw, "clôture");
@@ -1221,11 +1232,11 @@ function mergeImportedRows(rows) {
 
     const existing = ref ? state.shipments.find((s) => norm(s.ref) === norm(ref)) : null;
     if (existing) {
-      Object.assign(existing, { client, transitaire, clientStepValue, transitStepValue, datePositionnement, dateCloture, dateETD, dateETA });
+      Object.assign(existing, { client, transitaire, currentStepValue, datePositionnement, dateCloture, dateETD, dateETA });
       updated++;
     } else {
       state.shipments.push({
-        id: uid(), ref, client, transitaire, clientStepValue, transitStepValue,
+        id: uid(), ref, client, transitaire, currentStepValue,
         datePositionnement, dateCloture, dateETD, dateETA, comment: "", createdAt: Date.now(),
       });
       added++;
@@ -1242,12 +1253,11 @@ function csvEscape(value) {
 
 function exportCsv() {
   const rows = [
-    ["Référence", "Client", "Transitaire", "Étape client", "Étape transitaire", "Date positionnement", "Date clôture", "ETD", "ETA"],
+    ["Référence", "Client", "Transitaire", "Étape", "Date positionnement", "Date clôture", "ETD", "ETA"],
   ];
   state.shipments.forEach((s) => {
     rows.push([
-      s.ref || "", s.client || "", s.transitaire || "",
-      s.clientStepValue || "", s.transitStepValue || "",
+      s.ref || "", s.client || "", s.transitaire || "", s.currentStepValue || "",
       s.datePositionnement || "", s.dateCloture || "", s.dateETD || "", s.dateETA || "",
     ]);
   });
@@ -1316,15 +1326,16 @@ function openMap() {
   const unlocated = new Set(); // ports sans coordonnées connues
 
   active.forEach((s) => {
-    const port = state.clientPorts[s.client];
-    if (!port) return;
-    const coords = lookupPortCoords(port);
-    if (coords) {
-      if (!byPort[port]) byPort[port] = { coords, shipments: [] };
-      byPort[port].shipments.push(s);
-    } else {
-      unlocated.add(port);
-    }
+    const ports = state.clientPorts[s.client] || [];
+    ports.forEach((port) => {
+      const coords = lookupPortCoords(port);
+      if (coords) {
+        if (!byPort[port]) byPort[port] = { coords, shipments: [] };
+        byPort[port].shipments.push(s);
+      } else {
+        unlocated.add(port);
+      }
+    });
   });
 
   const pins = Object.entries(byPort)
@@ -1383,7 +1394,7 @@ function openMap() {
 }
 
 function openPortPopover(port) {
-  const active = state.shipments.filter((s) => overallStatus(s) !== "LIVRÉ" && s.client && state.clientPorts[s.client] === port);
+  const active = state.shipments.filter((s) => overallStatus(s) !== "LIVRÉ" && s.client && (state.clientPorts[s.client] || []).includes(port));
   const root = document.getElementById("port-popover-root");
   if (!root) return;
   root.innerHTML = `
@@ -1422,8 +1433,7 @@ function locatePort(port) {
 // ---------- Réglages : étapes éditables ----------
 function openSettings() {
   draftSteps = {
-    client: [...state.steps.client],
-    transit: [...state.steps.transit],
+    steps: state.steps.map((s) => ({ ...s })),
     documents: [...state.documents],
     clients: [...state.lists.clients],
     transitaires: [...state.lists.transitaires],
@@ -1437,17 +1447,12 @@ function renderSettingsModal() {
   <div class="modal-overlay" data-action="overlay-close">
     <div class="modal wide">
       <div class="modal-head"><h2>Réglages</h2><button class="close-btn" data-action="close-modal">${icon("x", 18)}</button></div>
-      <div class="modal-note">Étapes : l'ordre détermine la progression du bateau. Clients, Transitaires, Ports : listes proposées dans "Nouvel envoi". Documents : assignés Soka/Transitaire sur chaque fiche — l'assignation est mémorisée par client et s'applique à toutes ses commandes.</div>
+      <div class="modal-note">Étapes : un seul suivi numéroté, colore chaque étape selon qu'elle appartient au client (bleu) ou au transitaire (brun) — l'ordre détermine la progression du bateau. Documents et Ports : cochés une fois par client, valables sur toutes ses commandes. Clients, Transitaires : listes proposées dans "Nouvel envoi".</div>
       <div class="settings-columns">
-        <div class="settings-col">
-          <h3>${icon("package", 13, "margin-right:4px;")}Étapes côté client</h3>
-          <div id="settings-client"></div>
-          <button class="add-step-btn" data-action="add-step" data-type="client">+ Ajouter une étape</button>
-        </div>
-        <div class="settings-col">
-          <h3>${icon("truck", 13, "margin-right:4px;")}Étapes côté transitaire</h3>
-          <div id="settings-transit"></div>
-          <button class="add-step-btn" data-action="add-step" data-type="transit">+ Ajouter une étape</button>
+        <div class="settings-col" style="flex-basis:100%;">
+          <h3>${icon("package", 13, "margin-right:4px;")}Étapes du suivi</h3>
+          <div id="settings-steps"></div>
+          <button class="add-step-btn" data-action="add-step" data-type="steps">+ Ajouter une étape</button>
         </div>
         <div class="settings-col">
           <h3>${icon("file", 13, "margin-right:4px;")}Documents</h3>
@@ -1473,12 +1478,32 @@ function renderSettingsModal() {
       <button class="modal-submit" style="background:var(--blue); color:var(--paper); margin-top:16px;" data-action="save-settings">Enregistrer</button>
     </div>
   </div>`;
-  renderStepEditColumn("client");
-  renderStepEditColumn("transit");
+  renderStepsEditColumn();
   renderStepEditColumn("documents");
   renderStepEditColumn("clients");
   renderStepEditColumn("transitaires");
   renderStepEditColumn("ports");
+}
+
+function renderStepsEditColumn() {
+  const container = document.getElementById("settings-steps");
+  container.innerHTML = draftSteps.steps.map((step, i) => `
+    <div class="step-edit-row">
+      <span class="step-num">${i + 1}</span>
+      <button class="icon-btn" data-action="move-step" data-type="steps" data-index="${i}" data-dir="-1" ${i === 0 ? "disabled" : ""}>${icon("chevronUp", 12)}</button>
+      <button class="icon-btn" data-action="move-step" data-type="steps" data-index="${i}" data-dir="1" ${i === draftSteps.steps.length - 1 ? "disabled" : ""}>${icon("chevronDown", 12)}</button>
+      <input value="${escapeHtml(step.label)}" data-action="update-step-text" data-type="steps" data-index="${i}" />
+      <button class="doc-btn ${step.type === "client" ? "active-soka" : ""}" data-action="set-step-type" data-index="${i}" data-type="client">Client</button>
+      <button class="doc-btn ${step.type === "transitaire" ? "active-transit" : ""}" data-action="set-step-type" data-index="${i}" data-type="transitaire">Transitaire</button>
+      <button class="icon-btn" data-action="remove-step" data-type="steps" data-index="${i}">${icon("x", 12)}</button>
+    </div>
+  `).join("");
+}
+
+function setDraftStepType(i, type) {
+  if (!draftSteps.steps[i]) return;
+  draftSteps.steps[i].type = type;
+  renderStepsEditColumn();
 }
 
 function renderStepEditColumn(type) {
@@ -1493,32 +1518,40 @@ function renderStepEditColumn(type) {
   `).join("");
 }
 
-function updateDraftStep(type, i, value) { draftSteps[type][i] = value; }
-function addDraftStep(type) { draftSteps[type].push("Nouvelle étape"); renderStepEditColumn(type); }
-function removeDraftStep(type, i) {
-  const requiresMinOne = type === "client" || type === "transit";
-  if (requiresMinOne && draftSteps[type].length <= 1) { alert("Il faut garder au moins une étape."); return; }
-  draftSteps[type].splice(i, 1);
+function updateDraftStep(type, i, value) {
+  if (type === "steps") draftSteps.steps[i].label = value;
+  else draftSteps[type][i] = value;
+}
+function addDraftStep(type) {
+  if (type === "steps") { draftSteps.steps.push({ label: "Nouvelle étape", type: "client" }); renderStepsEditColumn(); return; }
+  draftSteps[type].push("Nouvelle étape");
   renderStepEditColumn(type);
 }
+function removeDraftStep(type, i) {
+  const list = type === "steps" ? draftSteps.steps : draftSteps[type];
+  if (list.length <= 1) { alert("Il faut garder au moins une étape."); return; }
+  list.splice(i, 1);
+  if (type === "steps") renderStepsEditColumn();
+  else renderStepEditColumn(type);
+}
 function moveDraftStep(type, i, dir) {
+  const list = type === "steps" ? draftSteps.steps : draftSteps[type];
   const j = i + dir;
-  if (j < 0 || j >= draftSteps[type].length) return;
-  [draftSteps[type][i], draftSteps[type][j]] = [draftSteps[type][j], draftSteps[type][i]];
-  renderStepEditColumn(type);
+  if (j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  if (type === "steps") renderStepsEditColumn();
+  else renderStepEditColumn(type);
 }
 
 function saveSettings() {
+  const cleanSteps = draftSteps.steps.map((s) => ({ label: s.label.trim(), type: s.type })).filter((s) => s.label.length > 0);
   const clean = (arr) => arr.map((s) => s.trim()).filter((s) => s.length > 0);
-  const client = clean(draftSteps.client);
-  const transit = clean(draftSteps.transit);
   const documents = clean(draftSteps.documents || []);
   const clients = clean(draftSteps.clients || []);
   const transitaires = clean(draftSteps.transitaires || []);
   const ports = clean(draftSteps.ports || []);
-  if (client.length === 0 || transit.length === 0) { alert("Chaque liste d'étapes doit contenir au moins une étape."); return; }
-  state.steps.client = client;
-  state.steps.transit = transit;
+  if (cleanSteps.length === 0) { alert("Le suivi doit contenir au moins une étape."); return; }
+  state.steps = cleanSteps;
   state.documents = documents;
   state.lists.clients = clients;
   state.lists.transitaires = transitaires;
@@ -1540,9 +1573,11 @@ function handleDelegatedClick(e) {
     case "set-filter": setFilter(el.dataset.filter); break;
     case "clear-client-filter": clearClientFilter(); break;
     case "filter-client": filterByClient(el.dataset.client); break;
-    case "set-step": setStep(el.dataset.id, el.dataset.type, el.dataset.value); break;
+    case "set-step": setStep(el.dataset.id, el.dataset.value); break;
     case "delete-shipment": deleteShipment(el.dataset.id); break;
-    case "set-doc-owner": setDocumentOwner(el.dataset.client, el.dataset.doc, el.dataset.owner); break;
+    case "toggle-client-doc": toggleClientDocument(el.dataset.client, el.dataset.doc); break;
+    case "toggle-client-port": toggleClientPort(el.dataset.client, el.dataset.port); break;
+    case "set-step-type": setDraftStepType(Number(el.dataset.index), el.dataset.type); break;
     case "scroll-to-shipment": {
       const target = document.getElementById("shipment-" + el.dataset.id);
       if (target) {
@@ -1604,8 +1639,6 @@ function handleDelegatedChange(e) {
   if (el.dataset.action === "toggle-new-field") {
     const target = document.getElementById(el.dataset.target);
     if (target) target.style.display = el.value === "__new__" ? "block" : "none";
-  } else if (el.dataset.action === "set-client-port") {
-    setClientPort(el.dataset.client, el.value);
   } else if (el.dataset.action === "update-date") {
     updateDate(el.dataset.id, el.dataset.field, el.value);
   }
