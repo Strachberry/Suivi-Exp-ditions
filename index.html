@@ -1085,11 +1085,87 @@ function splitDelimitedLine(line, delim) {
   return cells;
 }
 
+function detectDelimiter(line) {
+  const counts = { "\t": line.split("\t").length, ",": line.split(",").length, ";": line.split(";").length };
+  let best = "\t";
+  Object.keys(counts).forEach((d) => { if (counts[d] > counts[best]) best = d; });
+  return best;
+}
+
 function parseDelimitedText(text) {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const clean = text.replace(/^\uFEFF/, ""); // BOM éventuel en tête de fichier
+  const lines = clean.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length === 0) return [];
-  const delim = lines[0].split("\t").length > lines[0].split(",").length ? "\t" : ",";
+  const delim = detectDelimiter(lines[0]);
   return lines.map((l) => splitDelimitedLine(l, delim));
+}
+
+function convertFrDateToISO(raw) {
+  if (!raw) return "";
+  const datePart = raw.trim().split(" ")[0]; // ignore l'heure éventuelle
+  const m = datePart.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return "";
+  const [, d, mo, y] = m;
+  return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+}
+
+function extractPortFromAddress(addr) {
+  if (!addr) return "";
+  const first = addr.split(" - ")[0] || "";
+  return first.trim().replace(/\s+/g, " ");
+}
+
+function isSokaSourceHeader(headerRowNorm) {
+  return headerRowNorm.includes("doc_numpiece");
+}
+
+function mergeSokaSourceRows(rows) {
+  const norm = (s) => (s || "").trim().toLowerCase();
+  const headerRowNorm = rows[0].map(norm);
+  const idx = {
+    ref: headerRowNorm.indexOf("doc_numpiece"),
+    client: headerRowNorm.indexOf("client_code"),
+    date: headerRowNorm.indexOf("doc_datelivraison"),
+    address: headerRowNorm.indexOf("doc_adresselivraison"),
+  };
+
+  const warnings = [];
+  let added = 0, updated = 0;
+  let listsChanged = false, portsChanged = false;
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const ref = (row[idx.ref] || "").trim();
+    const client = (row[idx.client] || "").trim();
+    if (!ref && !client) continue;
+
+    const datePositionnement = convertFrDateToISO(row[idx.date] || "");
+    const port = extractPortFromAddress(row[idx.address] || "");
+
+    if (client && port) {
+      if (!state.lists.clients.includes(client)) { state.lists.clients.push(client); listsChanged = true; }
+      if (!state.lists.ports.includes(port)) { state.lists.ports.push(port); listsChanged = true; }
+      if (state.clientPorts[client] !== port) { state.clientPorts[client] = port; portsChanged = true; }
+    }
+
+    const existing = ref ? state.shipments.find((s) => norm(s.ref) === norm(ref)) : null;
+    if (existing) {
+      existing.client = client || existing.client;
+      if (datePositionnement) existing.datePositionnement = datePositionnement;
+      updated++;
+    } else {
+      state.shipments.push({
+        id: uid(), ref, client, transitaire: "", clientStepValue: "", transitStepValue: "",
+        datePositionnement, dateCloture: "", dateETD: "", dateETA: "",
+        comment: "", createdAt: Date.now(),
+      });
+      added++;
+    }
+  }
+
+  if (listsChanged) saveLists();
+  if (portsChanged) saveClientPorts();
+  return { added, updated, warnings };
 }
 
 function mergeImportedRows(rows) {
@@ -1220,7 +1296,9 @@ function handleImportFile(event) {
 function submitImport() {
   const text = document.getElementById("import-text").value;
   const rows = parseDelimitedText(text);
-  const { added, updated, warnings } = mergeImportedRows(rows);
+  const norm = (s) => (s || "").trim().toLowerCase();
+  const isSoka = rows.length > 0 && isSokaSourceHeader(rows[0].map(norm));
+  const { added, updated, warnings } = isSoka ? mergeSokaSourceRows(rows) : mergeImportedRows(rows);
   const feedback = document.getElementById("import-feedback");
   let html = "";
   if (warnings.length) html += `<div class="warning-box">${warnings.map((w) => `${icon("alertCircle", 13, "margin-right:4px;")}${escapeHtml(w)}`).join("<br>")}</div>`;
